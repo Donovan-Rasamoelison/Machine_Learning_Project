@@ -1,5 +1,5 @@
 ---
-title: "PREDICTING INFLATION RATE USING GOOGLE TREND KEYWORDS"
+title: "PREDICTING INFLATION USING GOOGLE TREND SEARCH RATE"
 author: "Donovan Rasamoelison" 
 subtitle: "PSTAT 251 - Machine Learning Project"
 date: "2022-11-19"
@@ -20,7 +20,7 @@ Please click [here](https://github.com/Donovan-Rasamoelison/Machine_Learning_Pro
 
 # 1 - INTRODUCTION
 
-Computing inflation rate is a long and arduous task, especially in developing countries. It requires a long process from sending surveys to various businesses and consumers to processing the data. However, current and future inflation projections are often necessary for several economic decision making entities. For instance, central banks use inflation projections to make decisions on interest rates, businesses need inflation projections when accounting for the value of their inventories and supplies. This project aims to provide a current and accurate prediction of  inflation in different countries using  current search data of keywords related to inflation from Google Trend and by applting various machine learning models. Specifically, the main challenge is to investigate if it is possible, without any prior inflation information, to predict inflation using only Google Trend keywords. The common approach to this problem would be to estimate the following model: 
+Computing inflation rate can be a long and arduous task, especially in developing countries. It is usually a long process from sending surveys to various businesses and consumers to processing analyzing the survey data. However, current and future inflation projections are often necessary for several economic decision making entities. For instance, central banks use inflation projections to make decisions on interest rates and businesses need inflation projections when accounting for the value of their inventories and supplies. This project, by applying various machine learning models, aims to provide a current and accurate prediction of  inflation using  current search data of keywords related to inflation from Google Trend. Specifically, the main challenge is to investigate if it is possible, without any prior inflation information, to predict inflation using only Google Trend keywords. The common approach to this problem would be to estimate the following model: 
 
 $$ Inflation_{t} = \sum_{s=1}^{S}\delta_sInflation_{t-s} + X_t \beta + \sum_{r=1}^{R}X_{t-r} \gamma_{r} + \epsilon_t $$
 where: 
@@ -33,15 +33,15 @@ $X_t = \text{a vector of search magnitude from Google Trend of different inlfati
 However, given that the purpose of this study is to predict inflation without any prior information on inflation, the lagged inflation values are removed from the predictor set and the final model estimated will be: 
 $$ Inflation_{t} =  X_t \beta + \sum_{r=1}^{R}X_{t-r} \gamma_{r} + \epsilon_t (1)$$
 
-Excluding the lagged values of inflation from the predictor set worsen the prediction power of the model as prior lagged values are highly predictive of future values. The challenge is to test how much can the different machine learning models remediate for this step of removing the lagged inflation values. 
+Excluding the lagged values of inflation from the predictor set can worsen the prediction power of the model as prior lagged values are highly predictive of future values. The challenge is to test how much can the different machine learning models remediate for this step of removing the lagged inflation values. 
 
-This model model can be useful in many ways. For instance, given that sending and processing inflation surveys can take several months, this model can be used to predict current inflation (or even inflation from the last few months) because search data are current. Moreover, the prediction from this model can also be used to provide inflation estimates from various countries where collecting inflation data is very difficult.
+This model can be useful in many ways. For instance, given that sending and processing inflation surveys can take several months, this model can be used to predict current inflation (or even inflation from the last few months) because search data are current. Moreover, the prediction from this model can also be used to provide inflation estimates from various countries where collecting inflation data is very difficult.
 
-To conduct the primary analysis, I first choose the relevant keywords related to inflation using newspaper articles. I scrap more than 300,000 articles between 2015 and 2017 from several US newspapers such as the New York Times and the Washington Post, and I filter out the articles that contains the word inflation in the content or in the title. Then, using the articles with the word inflation, I compute the most repeated words and use them as the keywords predictive of inflation. Unsurprisingly, the most repeated words from the articles are mostly economic terms that are widely used when discussing about inflation, such as interest rate, federal reserve, growth, market. 
+To conduct the primary analysis, I first choose the relevant keywords related to inflation using newspaper articles. I scrap more than 300,000 articles between 2015 and 2017 from several US newspapers such as the New York Times and the Washington Post, and I filter out the articles that contains the word inflation in the content or in the title. Then, using the articles with the word inflation, I compute the most repeated words and use them as the keywords relevant for inflation. Unsurprisingly, the most repeated words from the articles are mostly economic terms that are widely used when discussing about inflation, such as interest rate, federal reserve, growth, market. 
 
-After identifying the keywords from the articles, I pipe the search data of different countries related to these keywords from Google Trend. The search data related to these keywords are from 2004, the time Google Trend started to record search data, to 2022. Then I merge the search data with country-level inflation data that I collected inflation data. The original inflation data I collected from the OECD website contains 43 countries, but due to time constraints, I conducted this analysis only on 9 countries that I selected as representative of different continents.
+After identifying the keywords from the articles, I pipe the search data related to these keywords from different countries using Google Trend. The search data related to these keywords are from 2004, the time Google Trend started to record search data, to 2022. Then, I merge the search data with the country-level inflation data that I collected from the OECD website. The original inflation data I collected from the OECD website contains 43 countries, but due to time constraints, I only conducted the analysis on 9 countries that I selected as representative of different continents.
 
-Finally, I estimate equation (1), where the dependent variable is percent change in inflation, and the predictors are the keywords search data and their lagged values, using 5 different Machine Learning (ML) models: polynomial regression, Ridge/Lasso regression, KNN regression, boosted tree, and random forest. To conduct this analysis, I proceed with the following steps:
+Finally, I estimate equation (1) using 5 different Machine Learning (ML) models: polynomial regression, Ridge/Lasso regression, KNN regression, boosted tree, and random forest. To estimate these ML models, I proceed with the following steps:
 
 - I split the data into 3 different sets:
 
@@ -57,9 +57,9 @@ Finally, I estimate equation (1), where the dependent variable is percent change
 
 My primary findings suggest that the prediction is better for more flexible models. On the training set, polynomial regression achieves the highest RMSE while boosted tree achieves the lowest RMSE. Although it is common practice to only fit the model with the lowest training RMSE on the test set, I fit the 5 models on the test sets for comparison and learning purposes. Random forest achieves the lowest RMSE on test set 1 and KNN achieves the lowest RMSE on test set 2.  
 
-The prediction results on test set 2, the set of data after 2017 on the 6 countries that were not randomly selected, is promising. Between 2017 and 2020, the start of Covid-19 in which had a substantive impact on inflation, the model does a decent job in predicting inflation path. However, after 2020, the effects of Covid-19 on inflation made the prediction of inflation more challenging for the models. This result is expected given that the keywords were collected between 2015 and 2017, so the model has no predictive power based on the Covid-19 shock. 
+The prediction results on test set 2, the set of data after 2017 on the 6 countries that were not randomly selected, is promising. Between 2017 and 2020, the model does a decent job in predicting inflation path. However, after 2020, the effects of Covid-19 on inflation made the prediction of inflation more challenging for the models. This result is expected given that the keywords were collected between 2015 and 2017, so the model has no predictive power based on the Covid-19 shock. However, Covid-19 had a substantive impact on inflation.
 
-On the hand, the models are not performing very well on test set 1, the set of 3 randomly selected countries. This result is also expected given that this test set is relatively large compared to test 2. On test set 1, the models predict the inflation path of the 3 randomly chosen countries from 2004 to 2022,  which is a relatively hard task compared to the estimation in test set 2 for various reasons. First, compared to test set 2, there is no prior information of inflation path from the 3 countries included in the model. Moreover, the time frame is very long, which implies that several shocks that can inflation rate from the different countries are left unaccounted in the models. This issue portrays the limitation of only using US newspapers to select the keywords, which generally does not account for the major events that can affect inflation trend in the other countries. Finally, given that most countries already have some prior information on inflation trend, results from test set 2 are more important and more realistic.
+On the hand, the models are not performing very well on test set 1, the set of 3 randomly selected countries. This result is also expected given that this test set is relatively large compared to test 2. On test set 1, the models predict the inflation path of the 3 randomly chosen countries from 2004 to 2022,  which is a relatively hard task compared to the estimation in test set 2 for various reasons. First, compared to test set 2, there is no prior information of inflation path from the 3 countries included in the model. Moreover, the time frame is very long, which implies that several shocks that can affect the inflation rate in the different countries are left unaccounted in the models. This issue portrays the limitation of only using US newspapers to select the keywords, which generally does not account for the major events that can affect inflation trend in the other countries. Finally, given that most countries already have some prior information on inflation trend, results from test set 2 are more important and more realistic.
 
 Although the results are promising, the analysis in this project can be improved in many ways:
 
@@ -114,7 +114,7 @@ set.seed(0)
 ```
 
 
-# 2 - DATA COLLECTION AND WRANGLING
+# 2 - DATA COLLECTION/WRANGLING
 
 ## 2 - a) Keywords From Newspaper Data
 
@@ -172,7 +172,7 @@ content_word_freq <- content_word_freq1[-c(1,2,3,8,19)]
 wordcloud(words=names(content_word_freq), freq=content_word_freq, scale=c(2.5,.2), max.words = 50)
 ```
 
-Finally, I choose the 30 most common words from the articles to use them as predictors for equation (1). Here, I plot the 30 most common words.
+Finally, I choose the 30 most common words from the articles to use them as predictors for equation (1). Below, I plot the 30 most common words. We can see that the most common words are the words trump and inflation. This is not very surprising given that the articles where written the year before and after the 2016 election. It's also good to notice that most of the keywords represent the key economic words that are related to inflation including growth, rate, bank, fed. 
 
 ```{r, message = F, warning = F , fig.width = 10, fig.align='center'}
 #Picking the 30 most common words
@@ -198,18 +198,11 @@ keyword <- content_word_freq_data_fr$name
 
 ```
 
-We can see that the most common words are the words trump and inflation. This is not very surprising given that the articles where written the year before and after the 2016 election. It's also good to notice that most of the keywords represent the key economic words that are related to inflation including growth, rate, bank, fed. 
-
-Note: I used the following links to learn more on word processing:
-
-- https://dk81.github.io/dkmathstats_site/rtext-freq-words.html
-
-- https://rpubs.com/collnell/wordcloud
-
+Note: I used the following links ([1](https://dk81.github.io/dkmathstats_site/rtext-freq-words.html) , [2](https://rpubs.com/collnell/wordcloud)) to learn more on word processing.
 
 ## 2 - b) Google Trend Data 
 
-Using the keywords from the articles, I pipe the search magnitude from different countries related to these keywords from Google Trend. To do this, I use the [gTrendsR](https://cran.r-project.org/web/packages/gtrendsR/gtrendsR.pdf) package. I try to pipe the data from the beginning of Google Trend in January 2004 to the last avalaible data before I started this project which is September 2022. I selected 9 countries for this study, but more countries can be added. The countries selected were: United States, Great Britain, Australia, Canada, South Africa, Brazil, Japan, India, Mexico, and Switzerland.
+Using the keywords from the articles, I pipe the search magnitude from different countries related to these keywords from Google Trend. To do this, I use the [gTrendsR](https://cran.r-project.org/web/packages/gtrendsR/gtrendsR.pdf) package. I try to pipe the data from the beginning of Google Trend in January 2004 to the last avalaible data before I started this project, which is September 2022. I selected 9 countries for this study, but more countries can be added. The countries selected were: United States, Great Britain, Australia, Canada, South Africa, Brazil, Japan, India, Mexico, and Switzerland.
 
 ```{r, message = F, warning = F, eval = F}
 #################### Pipping the data from Google trend ##########################
@@ -361,7 +354,7 @@ paged_table(read_csv("./data/final_gtrend_data.csv") %>% dplyr::select(-c(1))%>%
 
 
 ## 2 - c) Inflation Data From OECD.
-The next set of data necessary for the analysis is the inflation data. Percent monthly inflation data from 43 different countries was collected from the [OECD website](https://www.oecd-ilibrary.org/economics/data/prices/consumer-prices-complete-database_0f2e8000-en). The data contain infomration on the inflation rate of a country at a particular date.
+The next set of data necessary for the analysis is the inflation data. Percent monthly inflation data from 43 different countries was collected from the [OECD website](https://www.oecd-ilibrary.org/economics/data/prices/consumer-prices-complete-database_0f2e8000-en). The data contain information on the inflation rate of a country at a particular date.
 
 ```{r,  message = F, warning = F}
 # Loading the inflation data from OECD
@@ -380,7 +373,7 @@ paged_table(monthly_inflation %>% head(5), options = list(rows.print = 15, cols.
 
 ```
 
-Below, I write a function called yearly inflation calculator to compute the yearly change in inflation using the monthly change data in inflation. Then, I construct an interactive map showing the median change in inflation across the 43 different countries from 2004 to 2022. This map shows how heterogenious is the inflation rate across countries. Some countries like the US have fairly stable inflation rate while others have very fluctuating values. However, notice the effects of Covid-19 on inflation rate across the countries. After the Covid-19 in 2020, almost all of the countries have high inflation level.  
+Below, I write a function called yearly inflation calculator to compute the yearly change in inflation using the monthly change data in inflation. Then, I construct an interactive map showing the median change in inflation across the 43 countries from the original OECD data between 2004 and 2022. This map shows how heterogenious is the inflation rate across countries. Some countries like the US have fairly stable inflation rate while others have very fluctuating values. However, notice the effects of Covid-19 on inflation rate across the countries. After the Covid-19 in 2020, almost all of the countries have high inflation level.  
 
 ```{r, message = F, warning = F}
 # Loading the full inflation data
@@ -437,10 +430,10 @@ monthly_inflation_map %>%
 
 ```
 
-Note: Mapping link: https://rstudio-pubs-static.s3.amazonaws.com/595502_57d6130e00384d99a6b0cea0e5212d44.html 
+Note: Mapping ressource [link](https://rstudio-pubs-static.s3.amazonaws.com/595502_57d6130e00384d99a6b0cea0e5212d44.html) 
 
 ## 2 - d) Merging Inflation Data And Google Trend Data.
-To merge the Google Trend data and the inflation, because the Google Trend data use 2-letter country codes to identify countries, I first need to add these 2-letter country codes in the inflation data. The 2-letter country codes are available in this [website](https://www.iban.com/country-codes).
+To merge the Google Trend data and the inflation data, because the Google Trend data use 2-letter country codes to identify countries, I first need to add these 2-letter country codes in the inflation data. The 2-letter country codes are available in this [website](https://www.iban.com/country-codes).
 
 ```{r, message = F, warning = F}
 # Adding country codes to the inflation data.
@@ -541,7 +534,7 @@ final_data <- final_data %>%
   ungroup()
 ```
 
-Now I compute the yearly inflation change from the monthly inflation change provided by the OECD inflation data using the yearly inflation calculator that I created.
+Now I compute the yearly inflation change from the monthly inflation change provided by the OECD inflation data using the yearly inflation calculator function that I created.
 
 ```{r, message = F, warning = F}
 ###########Calculating yearly inflation from monthly inflation
@@ -573,7 +566,7 @@ model_data <- model_data %>% filter(is.na(yearly_inflation)==F) %>%
   dplyr::select(-c(value, country)) 
 ```
 
-Finally, I include the one, two, and three-month lag values of the keywords. Therefore, the final data contains 1917 observations and 125 variables detailed as:
+Finally, I include the one, two, and three-month lag values of the keywords. This step is necessary because lagged search values can also have predictive power on inflation rate. Therefore, the final data contains 1917 observations and 125 variables detailed as:
 
 - 5 variables : yearly inflation, year, month, date, country code.
 
@@ -643,7 +636,7 @@ grid.arrange(inflation_plot1 , inflation_plot2 , nrow = 2 , ncol=1, top = textGr
 
 ```
 
-Below, I use a boxplot to show the monthly fluctuation of inflation rate across countries. The boxplots show that inflation is fairly stable across the months in all the countries. 
+Below, I use a boxplot to show the monthly fluctuation of inflation rate across countries. The boxplots show that inflation is fairly stable across the months in all the countries. I am a bit surprised by these results because I expected the inflation rate to be higher during the holiday seasons of November and December.
 
 ```{r, message = F, warning = F , fig.width = 15 , fig.height = 12, fig.align='center'}
 model_data %>% 
@@ -665,7 +658,7 @@ model_data %>%
     legend.position = "right")
 ```
 
-Below, I plot the correlation between the keywords and the inflation rate by country. First, notice that the inflation keyword is mostly correlated to the inflation rate for the English speaking countries such as the US, Great Britain, and Canada. For these countries, the correlation between the other keywords and inflation rate is also stronger. This correlation matrix shows the limitation of collecting the keywords only from US newspapers. Although English is mostly used over the world, especially for the study of economics, the local country language can be a limitation on the search magnitudes. Moreover, the relevant keywords may differ across countries. For instance, none of the keywords are correlated to inflation rate for Japan and only a few them are correlated to inflation rate for South Africa. 
+Below, I plot the correlation between the keywords and the inflation rate by country. First, notice that the inflation keyword is mostly correlated to the inflation rate for the English speaking countries such as the US, Great Britain, and Canada. For these countries, the correlation between the other keywords and inflation rate is also stronger. This correlation matrix shows the limitation of collecting the keywords only from US newspapers. Although English is mostly used over the world, especially for the study of economics, the local country language can be a limitation on the search magnitudes. Moreover, the relevant keywords may differ across countries. For instance, none of the keywords are correlated to inflation rate for Japan and only a of few them are correlated to inflation rate for South Africa. 
 
 ```{r, message = F, warning = F , fig.width = 18 , fig.height = 14, fig.align='center'}
 
@@ -775,9 +768,9 @@ grid.arrange(keyword_plot1 , keyword_plot2 , nrow = 2 , ncol=1, top = textGrob("
 ```
 
 
-# 4 - MACHINE LEARNING
+# 4 - MACHINE LEARNING MODELS
 
-The first step is to split the data into a training and testing set. Because my data is time series, it's hard to split the data randomly. Thus, I split the data into 3 parts. First I randomly select 3 countries from the 9 countries and use these as my first test set. My second test set contains the values after 2017 from the remaining 6 countries that were not randomly chosen. Thus, my training set contains values from the remaining 6 countries that were not randomly chosen and before 2017. 
+The first step in this section is to split the data into a training and testing set. Because my data is time series, it's not very convenient to split the data randomly. Thus, I split the data into 3 parts. First I randomly select 3 countries from the 9 countries and use these as my first test set. My second test set contains the values after 2017 from the remaining 6 countries that were not randomly chosen. Thus, my training set contains values from the remaining 6 countries that were not randomly chosen and before 2017. 
 
 Because I fixed the seed at the beginning of the study, the results are replicable. Given the seed I selected, the 3 randomly chosen countries for the test set are: South Africa (ZA), Great Britain (GB), and Mexico (MX). 
 
@@ -889,17 +882,17 @@ tune_res <- tune_grid(
 saveRDS(tune_res, file="./saved_Rdata/tune_res_poly_saved.RData")
 ```
 
-To estimate the polynomial regression, I first create a recipe for the model. A recipe is the set of predictors and the different changes applied to that set before estimating the model. For the polynomial regression recipe, first I remove the date from the set of predictors. Then given that I included lag value for the keywords which creates missing values, I impute the means of the variables for the missing values created by the lags. I also create dummy variables for the country, month, and year, and I normalize the predictors. I also include the polynomial degrees of the predictors in the recipe, and the optimal degree will be tuned using cross validation. For the cross validation, I choose the degree polynomial that gives the lowest RMSE for degrees between 1 and 5. This recipe results in the following model to be estimated: 
+To estimate the polynomial regression, I first create a recipe for the model. A recipe is the set of predictors and the different changes applied to that set before estimating the model. For the polynomial regression recipe, first I remove the date from the set of predictors. Then given that I included lagge values for the keywords which creates missing values, I impute the means of the variables for the missing values created by the lags. I also create dummy variables for the country, month, and year, and I normalize the predictors to have a mean of 0 and a standard deviation of 1. I also include the polynomial degrees of the predictors in the recipe, and the optimal degree will be tuned using cross validation. For the cross validation, I choose the degree polynomial that gives the lowest RMSE for degrees between 1 and 5. This recipe results in the following model to be estimated: 
 
 $$ Inflation_{cmy} = \sum_{r=0}^{R=3}X_{c(m-r)y} \beta_r  + \sum_{r=0}^{R=3}X_{c(m-r)y}^{p} \gamma_r  + \alpha Country_{my} + \delta Month_{cy}+ \theta Year_{my} + \epsilon_{cmy} (2)$$
 where: 
 
 $Inflation_{cmy} = \text{percent change in price in country c in month m in year y compared to prices from a year ago}$
-$X_{c(m-r)y} = \text{a vector of search magnitude from Google Trend of different inlfation keywords in county c in month m in year y lagged by some month r.}$ 
+$X_{c(m-r)y} = \text{a vector of search magnitude from Google Trend of different inflation keywords in county c in month m in year y lagged by some month r.}$ 
 $\text{Maximum lag is R = 3 (3-month lag). p on } X_{c(m-r)y}^{p} \text{ is the parameter to be tuned}$
 $\text{Country, Month, Year} = \text{dummy variables for Country, Month, and Year}$
 
-The cross validation RMSE and R square of each degree polynomials are shown in the graph below We can see that degree equal to 2 gives the lowest cross validationRMSE. Thus, using the degree polynomial of 2, I fit the training data to the training and the two different test sets  and compute the training and test RMSEs. The training and test sets definition are described again below:
+The cross validation RMSE and R square of each degree polynomials are shown in the graph below. We can see that degree equal to 2 gives the lowest cross validation RMSE. Thus, using the degree polynomial of 2, I fit the training data to the training set and the two different test sets  and compute the training and test RMSEs. The training and test sets definition are described again below:
 
 - test set 1: 3 randomly selected countries out of the 9 original countries.
 
@@ -945,7 +938,7 @@ paged_table(test_set2_RMSE_poly, options = list(rows.print = 15, cols.print = 5)
 ```
 
 
-Because degree polynomial p=2 gives the lowest RMSE on the training set, I use p=2 on for the recipe of the later models.
+Because degree polynomial p=2 gives the lowest RMSE on the training set, I use p=2 for the recipe of the later models.
 
 
 ## 4 - b) Ridge/Lasso
@@ -996,7 +989,7 @@ paged_table(best_par_ridge, options = list(rows.print = 15, cols.print = 5))
 
 ```
 
-We can see that lower mixture and penalty gives the lowest RMSE. The optimal penalty value is 0.0215 and the optimal mixture is 0.222. Thus, these parameters are used to fit the Ridge/Lasso on the training and the test sets.
+We can see that lower mixture and penalty gives the lowest RMSE. The optimal penalty value is 0.0215 and the optimal mixture is 0.222. Thus, these parameters are used to fit the Ridge/Lasso on the training and the test sets. The training MSE is 0.89, the test RMSE on test set 1 is 3.38, and the test RMSE on test set 2 is 2.57. Notice that Ridge/Lasso is doing better than polynomial regression on the test sets. It is also expected that the model performs best on the training set, and that test set 1 has the highest RMSE. 
 
 ```{r , message = F, warning = F}
 #Setting workflow with the best parameters
@@ -1019,8 +1012,6 @@ test_set2_RMSE_ridge <- augment(ridge_final_fit, new_data = model_data_test) %>%
 paged_table(test_set2_RMSE_ridge, options = list(rows.print = 15, cols.print = 5))
 
 ```
-
-The training MSE is 0.89, the test RMSE on test set 1 is 3.38, and the test RMSE on test set 2 is 2.57. Notice that Ridge/Lasso is doing better than polynomial regression on the test sets. It is also expected that the model performs best on the training set, and that test set 1 has the highest RMSE. 
 
 ## 4 - c) KNN Regression
 In this section, equation 2 is estimated with a recipe using degree of polynomial p = 2 using a KNN regression. The hyperparameter to be tuned is the number of neighbors to be chosen. The steps are similar to the steps used to evaluate the previous models. 
@@ -1054,7 +1045,7 @@ paged_table(best_par_knn, options = list(rows.print = 15, cols.print = 5))
 
 ```
 
-We can see that as the number of number of nearest neighbors increases, the validation RMSE decreases sharply and then increases sharply. The lowest RMSE is realized at the number of neighbors k = 7
+We can see that as the number of number of nearest neighbors increases, the validation RMSE decreases sharply and then increases sharply. The lowest RMSE is realized at the number of neighbors k = 7. The training MSE is 0.453, the test RMSE on test set 1 is 2.79, and the test RMSE on test set 2 is 2.11. Notice that KNN performs better than both the polynomial and the Ridge/Lasso regressions on the test sets. Similar to earlier results, the model performs best on the training set, and  test set 1 has the highest RMSE.
 
 ```{r, message = F, warning = F}
 knn_final_wf <- finalize_workflow(knn_workflow, best_par_knn)
@@ -1075,8 +1066,6 @@ test_set2_RMSE_knn <- augment(knn_final_fit, new_data = model_data_test) %>% rms
 paged_table(test_set2_RMSE_knn, options = list(rows.print = 15, cols.print = 5))
 
 ```
-
-The training MSE is 0.453, the test RMSE on test set 1 is 2.79, and the test RMSE on test set 2 is 2.11. Notice that KNN performs better than both the polynomial and the Ridge/Lasso regressions on the test sets. Similar to earlier results, the model performs best on the training set, and  test set 1 has the highest RMSE.
 
 ## 4 - d) Boosted Tree
 
@@ -1119,7 +1108,7 @@ paged_table(best_par_boost, options = list(rows.print = 15, cols.print = 5))
 
 ```
 
-We can see that the validation RMSE drops sharply as the number of trees increase but then converges when the number of tress is high. The optimal number of trees that gives the lowest RMSE is 231. Thus, a boosted tree with a parameter equal to 231 is fitted on the training set and test set 1 and 2. 
+We can see that the validation RMSE drops sharply as the number of trees increase but then converges when the number of tress is high. The optimal number of trees that gives the lowest RMSE is 231. Thus, a boosted tree with a parameter equal to 231 is fitted on the training set and test set 1 and 2. The training MSE is 0.000625, the test RMSE on test set 1 is 2.82, and the test RMSE on test set 2 is 2.67. Boosted tree perform less compared to KNN on the test sets. Similar to earlier results, the model performs best on the training set, and  test set 1 has the highest RMSE.
 
 ```{r , message = F, warning = F}
 boost_final_wf <- finalize_workflow(boost_wf, best_par_boost)
@@ -1140,8 +1129,6 @@ test_set2_RMSE_boost <- augment(boost_final_fit, new_data = model_data_test) %>%
 paged_table(test_set2_RMSE_boost, options = list(rows.print = 15, cols.print = 5))
 
 ```
-
-The training MSE is 0.000625, the test RMSE on test set 1 is 2.82, and the test RMSE on test set 2 is 2.67. Boosted tree perform less compared to KNN on the test sets. Similar to earlier results, the model performs best on the training set, and  test set 1 has the highest RMSE.
 
 ## 4 - e) Random Forest
 
@@ -1194,7 +1181,7 @@ paged_table(best_par_rf, options = list(rows.print = 15, cols.print = 5))
 
 ```
 
-We can see that as the number of randomly selected predictors mtry increases the validation RMSE  decreases. On the other hand, the RMSE seems to converge given that number of trees selected for the validation are very high. The RMSE increases as the number of min_n is increasing. The optimal parameters are: mtry = 120, trees = 1666, and min_n = 10
+We can see that as the number of randomly selected predictors mtry increases the validation RMSE  decreases. On the other hand, the RMSE seems to converge given that number of trees selected for the validation are very high. The RMSE increases as the number of min_n is increasing. The optimal parameters are: mtry = 120, trees = 1666, and min_n = 10. The training MSE is 0.39, the test RMSE on test set 1 is 2.47, and the test RMSE on test set 2 is 2.37. Random forest performs better than boosted tree on the test sets. Similar to earlier results, the model performs best on the training set, and  test set 1 has the highest RMSE
 
 ```{r , message = F, warning = F}
 rf_final_wf <- finalize_workflow(rf_wf, best_par_rf)
@@ -1215,8 +1202,6 @@ test_set2_RMSE_rf <- augment(rf_final_fit, new_data = model_data_test) %>% rmse(
 paged_table(test_set2_RMSE_rf, options = list(rows.print = 15, cols.print = 5))
 
 ```
-
-The training MSE is 0.39, the test RMSE on test set 1 is 2.47, and the test RMSE on test set 2 is 2.37. Random forest performs better than boosted tree on the test sets. Similar to earlier results, the model performs best on the training set, and  test set 1 has the highest RMSE
 
 ## 4 - f) Model Results Discussion
 
@@ -1249,7 +1234,7 @@ rmse_tibble %>% ggplot(aes(x = models)) +
 ```
 
 
-Here, I compare how the predictions from random forest (the best model) and polynomial regression (the worst model) on test set 2, the set after 2017 on the countries not randomly selected for test set 1. Betwee 2017 and the Covid-19 period starting in 2020, random forest performs fairly well across the countries in predicting inflation path. However, the Covid-19 period starting in 2020 which had adverse effects on inflation path, the performance of the model is not very good. This result is not surprising given that the keywords collected were between 2015 and 2017, which provide no information on the Covid-19 period. So the model has no predictive power based on the Covid-19 shock This plot also shows the difference in performance between the polynomial regression and random forest. Although they fairly follow the path in the training set, random forest's prediction is a lot better on the test set.
+Here, I compare how the predictions from random forest (the best model) and polynomial regression (the worst model) on test set 2, the set after 2017 on the countries not randomly selected for test set 1. Between 2017 and the Covid-19 period starting in 2020, random forest performs fairly well across the countries in predicting inflation path. However, after the Covid-19 period starting in 2020 which had adverse effects on inflation path, the performance of the model is not very good. This result is not surprising given that the keywords collected were between 2015 and 2017, which provide no information on the Covid-19 period. So the model has no predictive power based on the Covid-19 shock. This plot also shows the difference in performance between the polynomial regression and random forest. Although they fairly follow the path in the training set, random forest's prediction is a lot better on the test set.
 
 ```{r , message = F, warning = F, fig.width = 14 , fig.height = 14}
 model_data_train_res <- predict(poly_reg_model_final_fit, new_data = model_data_train %>% dplyr::select(-yearly_inflation)) 
@@ -1294,7 +1279,7 @@ grid.arrange(list_plot[[1]], list_plot[[2]], list_plot[[3]], list_plot[[4]], lis
 
 ```
 
-The inflation path on test set 1, which contains the 3 randomly chosen countries, is represented in the graphs below. We can noteice that the performance of the models on prediciting inflation path is not very good. This result is  expected given that this test set is relatively large compared to test 2. 
+The inflation path on test set 1, which contains the 3 randomly chosen countries, is represented in the graphs below. We can see that the performance of the models on predicting inflation path is not very good in this test set. This result is  expected given that this test set is relatively large compared to test 2. The very long time frame implies that several shocks that can affect the inflation rate in the different countries are left unaccounted in the models.
 
 ```{r, message = F, warning = F, fig.width = 14 , fig.height = 14}
 
@@ -1319,7 +1304,7 @@ list_plot2 <- lapply(c(1:3), plot_poly_rf2)
 grid.arrange(list_plot2[[1]], list_plot2[[2]], list_plot2[[3]], nrow = 3 , ncol=1, top = textGrob("Comparing predicted values from Random Forest  and Polynomial Regression On Test Set 1 \n (ZA = South Africa / GB = Great Britain / MX = Mexico)", gp=gpar(fontsize=20,font=8)))
 ```
 
-Next, because some of the models overestimate the inflation rate and other underestimates it, I take the average prediction of the models and compare it to the performance of random forest. Although the average prediction does slightly better than random forest for Great Britain, overall, the prediction is not very good 
+Next, because some of the models overestimate the inflation rate and other underestimates it, I take the average prediction of the models and compare it to the performance of random forest. Although the average prediction does slightly better than random forest for Great Britain, overall, the prediction is not very good. 
 
 ```{r, message = F, warning = F, fig.width = 14 , fig.height = 14}
 final_res_country <- augment(poly_reg_model_final_fit, new_data = model_data_test_country) %>% dplyr::select(yearly_inflation,.pred, date, geo)
@@ -1365,14 +1350,11 @@ grid.arrange(list_plot3[[1]], list_plot3[[2]], list_plot3[[3]], nrow = 3 , ncol=
 
 On test set 1, the models predict the inflation path of the 3 randomly chosen countries from 2004 to 2022, which is a relatively hard task compared to the estimation in test set 2 for various reasons. First, compared to test set 2, there is no prior information of inflation path from the 3 countries included in the model. Moreover, the time frame is very long, which implies that several shocks that can inflation rate from the different countries are left unaccounted in the models. This issue portrays the limitation of only using US newspapers to select the keywords, which generally does not account for the major events that can affect inflation trend in the other countries. Finally, given that most countries already have some prior information on inflation trend, results from test set 2 are more important and more realistic.
 
-# 5 - Conclusion
+# 5 - CONCLUSION
 
 This project conducts an analysis of predicting inflation rate of various countries using Google Trend search data on different keywords related to inflation. The keywords were chosen using the most repeated words from various articles related to inflation published in the US. Machine learning models were implemented to conduct the predictions. Although some model adjustments are suggested for future projects, the results are promising and provide a fairly good prediction of inflation path for the set where some information on inflation is given. 
 
-
-
-
-
+As discussed earlier, the accuracy of this model can be improved in many ways. For instance, one can implement ML models that are more appropriate to time series data to account for serial correlation. Using keywords from the local language (Eg: Brazil: Portuguese, Mexico: Spanish) can also greatly improve the prediction accuracy of the models because they can account for the country level shocks that can affect inflation. Finally, adding more keywords from longer period of time can also account for the different events that can affect inflation rate in the long run.
 
 
 

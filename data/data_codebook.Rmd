@@ -1,0 +1,108 @@
+---
+title: "Data Codebook"
+author: "Donovan Rasamoelison"
+date: "2022-11-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Google trend data (final_gtrend.csv)
+
+This data was collected from Google Trend (https://trends.google.com/trends/?geo=US). Below is the name, type, measurement unit, and description of the variables:
+
+- variable name: date 
+
+- - type: package lubridate "date" type of variable.
+
+- - measurement unit: YYYY-MM-DD
+
+- - description: report the date of the search magnitude of the keyword.
+
+
+- variable name: geo 
+
+- - type: string.
+
+- - measurement unit: NA
+
+- - description: 2-letter country code.
+
+
+- variable name: keywords (inflation, price, ...) 
+
+- - type: numeric
+
+- - measurement unit: measured between 1-100. (1 the least search magnitude and 100 the most search magnitude between the period 2004-2022)
+
+- - description: report the search magnitude of each keyword from Google Trend between 2004 and 2022.
+
+
+# OECD inflation data (full_monthly_inflation_data_fixed_execel.csv)
+
+This data was collected from the OECD website (https://www.oecd-ilibrary.org/economics/data/prices/consumer-prices-complete-database_0f2e8000-en). Below is the name, type, measurement unit, and description of the variables:
+
+
+- variable name: Time 
+
+- - type: string
+
+- - measurement unit: NA
+
+- - description: name of the country.
+
+
+- variable name: Percentage 
+
+- - type: string
+
+- - measurement unit: NA
+
+- - description: indicated the unit of all the variables.
+
+
+- variable name: all variables named: Month-year (Eg: Jan-2004 , Feb-2004,.., Sep-2022)  
+
+- - type: numeric
+
+- - measurement unit: percentage
+
+- - description: report the monthly inflation rate in the country from the given year and month in the variable name.
+
+# Newspaper article data
+
+The newspaper article data was collected from Kaggle: (https://www.kaggle.com/datasets/snapcrack/all-the-news). However, the data is very large so I was not able to load it on github.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
