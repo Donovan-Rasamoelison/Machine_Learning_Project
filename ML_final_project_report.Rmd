@@ -1,0 +1,1380 @@
+---
+title: "PREDICTING INFLATION RATE USING GOOGLE TREND KEYWORDS"
+author: "Donovan Rasamoelison" 
+subtitle: "PSTAT 251 - Machine Learning Project"
+date: "2022-11-19"
+output: 
+  html_document:
+   toc: true
+   toc_float: true
+   code_folding: hide
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Please click [here](https://github.com/Donovan-Rasamoelison/Machine_Learning_Project) for the link to the github repository of this project.
+
+
+# 1 - INTRODUCTION
+
+Computing inflation rate is a long and arduous task, especially in developing countries. It requires a long process from sending surveys to various businesses and consumers to processing the data. However, current and future inflation projections are often necessary for several economic decision making entities. For instance, central banks use inflation projections to make decisions on interest rates, businesses need inflation projections when accounting for the value of their inventories and supplies. This project aims to provide a current and accurate prediction of  inflation in different countries using  current search data of keywords related to inflation from Google Trend and by applting various machine learning models. Specifically, the main challenge is to investigate if it is possible, without any prior inflation information, to predict inflation using only Google Trend keywords. The common approach to this problem would be to estimate the following model: 
+
+$$ Inflation_{t} = \sum_{s=1}^{S}\delta_sInflation_{t-s} + X_t \beta + \sum_{r=1}^{R}X_{t-r} \gamma_{r} + \epsilon_t $$
+where: 
+
+$Inflation_{t} = \text{percent change in price in month t compared to prices from a year ago}$ 
+$Inflation_{t-s} = \text{percent change in price in month t compared to prices from a year ago lagged by some s period}$ 
+$X_t = \text{a vector of search magnitude from Google Trend of different inflation keywords}$
+$X_t = \text{a vector of search magnitude from Google Trend of different inlfation keywords lagged by some r period}$
+
+However, given that the purpose of this study is to predict inflation without any prior information on inflation, the lagged inflation values are removed from the predictor set and the final model estimated will be: 
+$$ Inflation_{t} =  X_t \beta + \sum_{r=1}^{R}X_{t-r} \gamma_{r} + \epsilon_t (1)$$
+
+Excluding the lagged values of inflation from the predictor set worsen the prediction power of the model as prior lagged values are highly predictive of future values. The challenge is to test how much can the different machine learning models remediate for this step of removing the lagged inflation values. 
+
+This model model can be useful in many ways. For instance, given that sending and processing inflation surveys can take several months, this model can be used to predict current inflation (or even inflation from the last few months) because search data are current. Moreover, the prediction from this model can also be used to provide inflation estimates from various countries where collecting inflation data is very difficult.
+
+To conduct the primary analysis, I first choose the relevant keywords related to inflation using newspaper articles. I scrap more than 300,000 articles between 2015 and 2017 from several US newspapers such as the New York Times and the Washington Post, and I filter out the articles that contains the word inflation in the content or in the title. Then, using the articles with the word inflation, I compute the most repeated words and use them as the keywords predictive of inflation. Unsurprisingly, the most repeated words from the articles are mostly economic terms that are widely used when discussing about inflation, such as interest rate, federal reserve, growth, market. 
+
+After identifying the keywords from the articles, I pipe the search data of different countries related to these keywords from Google Trend. The search data related to these keywords are from 2004, the time Google Trend started to record search data, to 2022. Then I merge the search data with country-level inflation data that I collected inflation data. The original inflation data I collected from the OECD website contains 43 countries, but due to time constraints, I conducted this analysis only on 9 countries that I selected as representative of different continents.
+
+Finally, I estimate equation (1), where the dependent variable is percent change in inflation, and the predictors are the keywords search data and their lagged values, using 5 different Machine Learning (ML) models: polynomial regression, Ridge/Lasso regression, KNN regression, boosted tree, and random forest. To conduct this analysis, I proceed with the following steps:
+
+- I split the data into 3 different sets:
+
+- - test set 1: I randomly select 3 countries to form this set.
+
+- - test set 2: the set of data after 2017 on the 6 countries that were not randomly selected.
+
+- - training set: the set of data before 2017 on the 6 countries that were not randomly selected
+
+- For each of the machine learning model, because each model is characterized by some parameters (Eg: Ridge/Lasso are characterized by the penalty parameter, KNN by the number of neighbor parameter), I train the model using the training set and use cross validation to select the best parameters characterizing each model.
+
+- I fit the model with the parameter giving the lowest training Root Mean Square Error (RMSE) on the test sets.
+
+My primary findings suggest that the prediction is better for more flexible models. On the training set, polynomial regression achieves the highest RMSE while boosted tree achieves the lowest RMSE. Although it is common practice to only fit the model with the lowest training RMSE on the test set, I fit the 5 models on the test sets for comparison and learning purposes. Random forest achieves the lowest RMSE on test set 1 and KNN achieves the lowest RMSE on test set 2.  
+
+The prediction results on test set 2, the set of data after 2017 on the 6 countries that were not randomly selected, is promising. Between 2017 and 2020, the start of Covid-19 in which had a substantive impact on inflation, the model does a decent job in predicting inflation path. However, after 2020, the effects of Covid-19 on inflation made the prediction of inflation more challenging for the models. This result is expected given that the keywords were collected between 2015 and 2017, so the model has no predictive power based on the Covid-19 shock. 
+
+On the hand, the models are not performing very well on test set 1, the set of 3 randomly selected countries. This result is also expected given that this test set is relatively large compared to test 2. On test set 1, the models predict the inflation path of the 3 randomly chosen countries from 2004 to 2022,  which is a relatively hard task compared to the estimation in test set 2 for various reasons. First, compared to test set 2, there is no prior information of inflation path from the 3 countries included in the model. Moreover, the time frame is very long, which implies that several shocks that can inflation rate from the different countries are left unaccounted in the models. This issue portrays the limitation of only using US newspapers to select the keywords, which generally does not account for the major events that can affect inflation trend in the other countries. Finally, given that most countries already have some prior information on inflation trend, results from test set 2 are more important and more realistic.
+
+Although the results are promising, the analysis in this project can be improved in many ways:
+
+- the first is to implement ML models more appropriate to time series data to account for serial correlation. I only implement the models covered in the class which does not include time series ML models
+
+- using keywords from the local language (Eg: Brazil: Portuguese, Mexico: Spanish) can also greatly improve the prediction accuracy of the models. 
+
+- adding more keywords from longer period of time can account for the different events that can affect inflation rate.
+
+- collecting data for more countries. 
+
+This report is organized in the following way. In section 2, I describe the collection, cleaning, and merging of the different data sets. In section 3, I conduct some exploratory data analysis. In section 4, I implement the ML models and discuss their results, and section 5 is a brief conclusion. 
+
+NOTE: 
+
+- The codes are all folded to ease readers' view. Please click on code box to show the codes.
+
+- I am loading the necessary packages for the models and set the seed to a constant so I can replicate the simulations.
+
+```{r, message = F, warning = F}
+library(tidyverse)
+library(tidymodels)
+library(janitor)
+library(discrim)
+library(corrplot)
+library(klaR)
+library(glmnet)
+library(yardstick)
+library(rpart.plot)
+library(vip)
+library(randomForest)
+library(xgboost)
+library(ranger)
+library(tm)
+library(wordcloud)
+library(tidytext)
+library(devtools)
+library(curl)
+library(gtrendsR)
+library(ggplot2)
+library(ggthemes)
+library(grid)
+library(echarts4r)
+library(gganimate)
+library(widgetframe)
+library(plotly)
+library(viridis)
+library(DT)
+library(RColorBrewer)
+
+set.seed(0)
+```
+
+
+# 2 - DATA COLLECTION AND WRANGLING
+
+## 2 - a) Keywords From Newspaper Data
+
+To identify the relevant keywords related to inflation, a sample of newspaper articles published in the US are analyzed. The raw newspaper article data was collected from this [Kaggle page](https://www.kaggle.com/datasets/snapcrack/all-the-news). The original data contain more than 300,000 articles between 2015 and 2017 from publishers such as the New York time, CNN, Washington Post. To identify the articles related to inflation, I filter the articles that contain the word inflation in the title or or in the content of the article. There were 2,300 articles identified.  
+
+```{r, message = F, warning = F , eval = FALSE}
+#Loading the articles which came from 3 different CSV files and binding them
+article1 <- read_csv("./newspaper_data/articles1.csv") %>% 
+  filter(str_detect(tolower(title), "inflation") | str_detect(tolower(content), "inflation")) %>% #filter articles that contain inflation in the title or in the content
+  mutate(date = as.character(date))
+
+article2 <- read_csv("./newspaper_data/articles2.csv") %>% 
+  filter(str_detect(tolower(title), "inflation") | str_detect(tolower(content), "inflation")) %>%#filter articles that contain inflation in the title or in the content
+  mutate(date = as.character(date))
+
+article3 <- read_csv("./newspaper_data/articles3.csv") %>% 
+  filter(str_detect(tolower(title), "inflation") | str_detect(tolower(content), "inflation")) %>%#filter articles that contain inflation in the title or in the content
+  mutate(date = as.character(date))
+
+article <- bind_rows(article1,article2,article3)
+
+saveRDS(article, file="./saved_Rdata/article.RData")
+
+```
+
+After selecting the articles relevant for inflation, the next step is to clean the articles by removing irrelevant contents such as punctuation, white spaces, numbers, and stopwords. 
+
+```{r, message = F, warning = F }
+article <- readRDS("./saved_Rdata/article.RData")
+
+content_text <- Corpus(VectorSource(article$content)) #loading text content
+
+#Cleaning texts by removing punctuation, numbers, stopwords,...
+content_text_clean <- content_text %>%
+  tm_map(removePunctuation) %>%
+  tm_map(content_transformer(tolower)) %>%
+  tm_map(removeNumbers) %>%
+  tm_map(stripWhitespace) %>%
+  tm_map(removeWords, stopwords('english')) %>%
+  tm_map(removeWords, c("said","percent","will","   —","'s", ",", "   —","   “", "last","years","year", "new","one", "since", "also", "can", "like", "now","may", "many" , "first", "time", "just", "even", "much", "month","wednesday", "two", "according", "say", "still","week","get","data", "another","don't", "back","think","says","million","rates", "interest", "fell","trump’s", "united", "state","make","cut", "meeting","expected", "higher","american","don't", "markets", "federal","next", "reporting", "see", "country")) 
+```
+
+After cleaning the words, I can start making some visualizations. First, I make a word cloud of the 50 most common words from the articles.
+
+```{r, message = F, warning = F , fig.align='center'}
+content_text_clean <- as.matrix(TermDocumentMatrix(content_text_clean))
+
+#Sorting the words from the most common to the least common
+content_word_freq1<-sort(rowSums(content_text_clean), decreasing=TRUE)
+
+#Some words still passed the filtering so I remove them here
+content_word_freq <- content_word_freq1[-c(1,2,3,8,19)]
+
+#Plotting the word cloud
+wordcloud(words=names(content_word_freq), freq=content_word_freq, scale=c(2.5,.2), max.words = 50)
+```
+
+Finally, I choose the 30 most common words from the articles to use them as predictors for equation (1). Here, I plot the 30 most common words.
+
+```{r, message = F, warning = F , fig.width = 10, fig.align='center'}
+#Picking the 30 most common words
+content_word_freq <- content_word_freq[c(1:30)]
+
+#Putting the data in a long form and as a data frame
+content_word_freq_data_fr <- data.frame(as.list(content_word_freq)) %>% pivot_longer(everything())
+
+#Plotting the words barplot
+content_word_freq_barplot <- content_word_freq_data_fr %>%
+  mutate(name = reorder(name, value)) %>%
+  ggplot(aes(x = value, y = name)) +
+  geom_col(aes(fill = value))+
+  labs(x = "Count", y = "Word ", title = "Most Frequent Words In The Articles Containing The Keyword: INFLATION") +
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.title.x = element_text(face="bold", colour="darkblue", size = 12),
+        axis.title.y = element_text(face="bold", colour="darkblue", size = 12)) +
+  theme_minimal()
+
+content_word_freq_barplot
+
+keyword <- content_word_freq_data_fr$name
+
+```
+
+We can see that the most common words are the words trump and inflation. This is not very surprising given that the articles where written the year before and after the 2016 election. It's also good to notice that most of the keywords represent the key economic words that are related to inflation including growth, rate, bank, fed. 
+
+Note: I used the following links to learn more on word processing:
+
+- https://dk81.github.io/dkmathstats_site/rtext-freq-words.html
+
+- https://rpubs.com/collnell/wordcloud
+
+
+## 2 - b) Google Trend Data 
+
+Using the keywords from the articles, I pipe the search magnitude from different countries related to these keywords from Google Trend. To do this, I use the [gTrendsR](https://cran.r-project.org/web/packages/gtrendsR/gtrendsR.pdf) package. I try to pipe the data from the beginning of Google Trend in January 2004 to the last avalaible data before I started this project which is September 2022. I selected 9 countries for this study, but more countries can be added. The countries selected were: United States, Great Britain, Australia, Canada, South Africa, Brazil, Japan, India, Mexico, and Switzerland.
+
+```{r, message = F, warning = F, eval = F}
+#################### Pipping the data from Google trend ##########################
+
+# This chunk of code could be automated by a for loop, but it's better to split it 
+# because too many requests to Google Trend will result in an error (HTML = 429)
+
+# Pull each data for each country in a reasonable interval amount of time to avoid the error
+
+# I do not evaluate this code here since I already piped the data and saved it in a csv file. 
+
+keyword = content_word_freq_data_fr$name #These are the top 30 keywords from the articles.
+
+#The process for each country is:
+### create an empty list() for the country.
+### For a keyword, pipe the data from Google Trend using the function gtrends for the time between January 2004 and September 2009
+### Add the values for this keyword in the list created for the country.
+### Thus in the end, there is a list for each country containing the search values of each keywords.
+
+#United Sates
+results_US = list()
+  for (j in keyword) {
+    data <- gtrends(keyword = j, geo = "US", time = "2004-01-01 2022-09-09")
+    results_US[[j]] <- data$interest_over_time
+  }
+
+#Great Britain
+results_GB = list()
+for (j in keyword) {
+  data <- gtrends(keyword = j, geo = "GB", time = "2004-01-01 2022-09-09")
+  results_GB[[j]] <- data$interest_over_time
+}
+
+#Australia
+results_AU = list()
+for (j in keyword) {
+  data <- gtrends(keyword = j, geo = "AU", time = "2004-01-01 2022-09-09")
+  results_AU[[j]] <- data$interest_over_time
+}
+
+#Canada
+results_CA = list()
+for (j in keyword) {
+  data <- gtrends(keyword = j, geo = "CA", time = "2004-01-01 2022-09-09")
+  results_CA[[j]] <- data$interest_over_time
+}
+
+#South Africa
+results_ZA = list()
+for (j in keyword) {
+  data <- gtrends(keyword = j, geo = "ZA", time = "2004-01-01 2022-09-09")
+  results_ZA[[j]] <- data$interest_over_time
+}
+
+#Brazil
+results_BR = list()
+for (j in keyword) {
+  data <- gtrends(keyword = j, geo = "BR", time = "2004-01-01 2022-09-09")
+  results_BR[[j]] <- data$interest_over_time
+}
+
+#Japan
+results_JP = list()
+for (j in keyword) {
+  data <- gtrends(keyword = j, geo = "JP", time = "2004-01-01 2022-09-09")
+  results_JP[[j]] <- data$interest_over_time
+}
+
+#India
+results_IN = list()
+for (j in keyword) {
+  data <- gtrends(keyword = j, geo = "IN", time = "2004-01-01 2022-09-09")
+  results_IN[[j]] <- data$interest_over_time
+}
+
+#Mexico
+results_MX = list()
+for (j in keyword) {
+  data <- gtrends(keyword = j, geo = "MX", time = "2004-01-01 2022-09-09")
+  results_MX[[j]] <- data$interest_over_time
+}
+
+#Switzerland
+results_CH = list()
+for (j in keyword) {
+  data <- gtrends(keyword = j, geo = "CH", time = "2004-01-01 2022-09-09")
+  results_CH[[j]] <- data$interest_over_time
+}
+```
+
+
+```{r, message = F, warning = F, eval = F}
+###### After collecting the search values of each keyword in each country, 
+###### I combine the data from Google Trend into a single csv file ######
+
+results = list(results_ZA,results_US, results_MX, results_JP, results_IN, results_GB, results_CH, results_CA, results_BR, results_AU)
+
+country = list()
+
+k = 1
+
+for (j in results) { #each j represents the list for each country
+    
+    # This is an example of what I do in the for loop for the first keyword in the list of country j
+    # First, I select the necessary variables (date, hits, keyword, geo) from the data frame contained in the list of country j
+    # Then I replace the hits (= number of searches for the given keyword) to 0 if the number of hits are very low (<1)
+    # I convert the data frame into a wide format so that the keyword becomes a column of hit values.
+    # The steps above are repeated in the for loop for each keyword of country j and the column of hit values are joined together.
+  
+    data <- j[[1]] %>% 
+      select(date, hits, keyword, geo) %>% 
+      mutate(hits  = as.numeric(ifelse(hits == "<1",0,hits))) %>%
+      pivot_wider(names_from = keyword, values_from = hits)
+      
+    for (i in 2:length(keyword)) {
+      data_i <- j[[i]] %>% 
+        select(date, hits, keyword, geo) %>% 
+        mutate(hits  = as.numeric(ifelse(hits == "<1",0,hits))) %>%
+        pivot_wider(names_from = keyword, values_from = hits) %>%
+        select(-c(date, geo))
+        
+      data <- bind_cols(data , data_i) #Then once the data is in wide format, I bind by columns 
+    }
+    
+    #data <- a data frame with the columns the keywords and the rows the number of hits at a given data for country j
+    #I put the data for all the countries in a list called country
+    country[[k]] <- data 
+    k = k+1
+}
+
+# Finally, I retrieve the data frame from the country list and bind these by rows 
+# The final data frame has the column the keywords and the rows the the number of hits at a given data for all the countries over time.
+final_gtrend_data = data_frame()
+for (j in 1:length(country)) {
+  final_gtrend_data = bind_rows(final_gtrend_data, country[[j]])
+}
+
+#Saving final data as csv so that I do not have to re-run the code when knitting the RMD file.
+write.csv(final_gtrend_data, file = "./data/final_gtrend_data.csv") 
+```
+
+Here is a look at the first 10 observations of the Google Trend data. It contains information on the month, year, and the country code when the search was conducted. The keyword variables show the search magnitude during the specified date in the specified country.
+
+```{r, message = F, warning = F}
+library(rmarkdown)
+paged_table(read_csv("./data/final_gtrend_data.csv") %>% dplyr::select(-c(1))%>%head(10), options = list(rows.print = 15, cols.print = 5))
+
+```
+
+
+## 2 - c) Inflation Data From OECD.
+The next set of data necessary for the analysis is the inflation data. Percent monthly inflation data from 43 different countries was collected from the [OECD website](https://www.oecd-ilibrary.org/economics/data/prices/consumer-prices-complete-database_0f2e8000-en). The data contain infomration on the inflation rate of a country at a particular date.
+
+```{r,  message = F, warning = F}
+# Loading the inflation data from OECD
+monthly_inflation <- read_csv("./data/full_monthly_inflation_data_fixed_execel.csv")  
+
+# The inflation data contains every countries, but I only filter out the countries necessary for this analysis.
+test_country = c("Australia", "South Africa","United States", "Mexico", "Japan","India","United Kingdom","Switzerland", "Canada" , "Brazil" )
+monthly_inflation <-monthly_inflation  %>% dplyr::select(-c(2)) %>% janitor::clean_names()
+names(monthly_inflation)[1] = "country"
+
+#The inflation data is in wide format, so I am converting it to the long format to match the Google Trend data
+monthly_inflation <- monthly_inflation %>%
+  pivot_longer(c(2:226), names_pattern = "(........)", names_to = c("year"), values_transform = as.numeric)
+
+paged_table(monthly_inflation %>% head(5), options = list(rows.print = 15, cols.print = 5))
+
+```
+
+Below, I write a function called yearly inflation calculator to compute the yearly change in inflation using the monthly change data in inflation. Then, I construct an interactive map showing the median change in inflation across the 43 different countries from 2004 to 2022. This map shows how heterogenious is the inflation rate across countries. Some countries like the US have fairly stable inflation rate while others have very fluctuating values. However, notice the effects of Covid-19 on inflation rate across the countries. After the Covid-19 in 2020, almost all of the countries have high inflation level.  
+
+```{r, message = F, warning = F}
+# Loading the full inflation data
+monthly_inflation_map <- read_csv("./data/full_monthly_inflation_data_fixed_execel.csv")
+monthly_inflation_map <- monthly_inflation_map %>%
+  pivot_longer(c(2:227), names_pattern = "(........)", names_to = c("year"), values_transform = as.numeric)
+
+yearly_inflation_calculator <- function(x){
+  #Initial value from the previous month
+  a<-1+(lag(x,1)/100)
+  
+  for (i in 2:12) {
+    a = (1+(lag(x,i)/100))*a
+  }
+  return(a-1)
+}
+
+# Using the yearly_inflation_calculator function created above, I compute the yearly inflation for each country. 
+monthly_inflation_map <- monthly_inflation_map %>% 
+  group_by(Time) %>%
+  mutate(yearly_inflation = (yearly_inflation_calculator(value))*100)%>%
+  ungroup()
+
+#Here I compute the median change in inflation for each country at a given year 
+monthly_inflation_map <- monthly_inflation_map %>%
+  rename(country = Time) %>%
+  tidyr::extract(year, into = c("month_string" , "year_string"), regex = "(....)(\\d{1,4})" , remove = F) %>%
+  mutate(year = as.numeric(year_string)) %>%
+  group_by(country, year) %>%
+  mutate(yearly_inflation = median(value, na.rm = T)) %>%
+  dplyr::select(country, year, yearly_inflation, value) %>%
+  distinct(country, year, yearly_inflation, value) %>%
+  mutate(yearly_inflation = round(yearly_inflation,2))
+
+#Selecting the colors defining inflation levels
+qual_col_pals <- brewer.pal.info[brewer.pal.info$category == 'qual',]
+col_vector <- unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
+colours <- col_vector[c(1,12,24)]
+
+#I remove the missing values 
+monthly_inflation_map <- monthly_inflation_map %>%
+  filter(!(is.na(yearly_inflation)))
+
+#Creating the interactive map
+monthly_inflation_map %>%
+  group_by(year) %>%
+  e_chart(country, timeline = TRUE) %>%
+  e_map(yearly_inflation) %>%
+  e_visual_map(min= -1, max= 6.5, type = 'piecewise', inRange = list(color = colours)) %>%
+  e_title("Median by year of inflation rate from a year ago", left = "center") %>%
+  e_tooltip(
+    trigger = "item",
+    formatter = e_tooltip_choro_formatter())
+
+```
+
+Note: Mapping link: https://rstudio-pubs-static.s3.amazonaws.com/595502_57d6130e00384d99a6b0cea0e5212d44.html 
+
+## 2 - d) Merging Inflation Data And Google Trend Data.
+To merge the Google Trend data and the inflation, because the Google Trend data use 2-letter country codes to identify countries, I first need to add these 2-letter country codes in the inflation data. The 2-letter country codes are available in this [website](https://www.iban.com/country-codes).
+
+```{r, message = F, warning = F}
+# Adding country codes to the inflation data.
+# I did this by hand because I have very few countries. 
+# If the number of countries is large, it's easier to scrap the codes from the website before matching.
+
+monthly_inflation <- monthly_inflation %>% 
+  filter(country %in% test_country) %>%
+  mutate(geo = case_when(
+    country == "Australia"     ~ "AU",
+    country == "South Africa"  ~ "ZA",
+    country == "United States" ~ "US",
+    country == "Mexico"        ~ "MX",
+    country == "Japan"         ~ "JP",
+    country == "India"         ~ "IN",
+    country == "United Kingdom"~ "GB",
+    country == "Switzerland"   ~ "CH", 
+    country =="Canada"         ~ "CA",
+    country == "Brazil"        ~ "BR"
+  ))
+
+# We can see from section 2-c) that the date format for the inflation data is in the  month_year format (Eg: jan_2004). 
+# So I extract the year and month information from the month_year format of the inflation data and convert it to numbers.
+# I also extract the year and month information from the Google Trend data so I can use these to merge the two data.
+
+monthly_inflation <- monthly_inflation %>% 
+  tidyr::extract(year, into = c("month_string" , "year_string"), regex = "(....)(\\d{1,4})" , remove = F) %>%
+  mutate(year = as.numeric(year_string)) %>%
+  mutate(month = case_when(
+    month_string == "jan_" ~ 1,
+    month_string == "feb_" ~ 2,
+    month_string == "mar_" ~ 3,
+    month_string == "apr_" ~ 4,
+    month_string == "may_" ~ 5,
+    month_string == "jun_" ~ 6,
+    month_string == "jul_" ~ 7,
+    month_string == "aug_" ~ 8,
+    month_string == "sep_" ~ 9,
+    month_string == "oct_" ~ 10,
+    month_string == "nov_" ~ 11,
+    month_string == "dec_" ~ 12,
+  )) %>%
+  dplyr::select(!c(month_string,year_string)) %>%
+  arrange(geo,year,month)
+```
+
+```{r, message = F, warning = F}
+# Here I extract the year and month information from the Google Trend data
+gtrend_data = read_csv("./data/final_gtrend_data.csv") %>% dplyr::select(-c("...1")) %>% filter(!(geo=="AU"))
+gtrend_data <- gtrend_data %>%
+  mutate(year = as.numeric(lubridate::year(date))) %>%
+  mutate(month = as.numeric(lubridate::month(date)))%>%
+  arrange(geo,year,month)
+
+```
+
+Below is a peek of the merged data. The variable value indicates the monthly inflation from the OECD data, and the keyword variables from Google Trend are also described.
+
+```{r, message = F, warning = F}
+########### MERGING INFLATION AND GTREND##############
+# Each observation if identified by the country, the year, and the month variables.
+# Therefore, I use these variables to merge the two data.
+final_data <- monthly_inflation %>% left_join(gtrend_data, by = c("geo"="geo", "year"="year","month"="month"))
+
+#Reordering columns so data looks nicer
+final_data <- final_data %>% dplyr:: select("value", "country", "geo", "date", "year", "month", everything())
+
+paged_table(final_data %>% head(5), options = list(rows.print = 15, cols.print = 5))
+
+```
+
+Before going further, there are a few data cleaning that needs to be conducted. First, some of the inflation data is less than -1, which is impossible because prices cannot go negative. So I replace these values with the previous month's inflation rate. Next, Japan is missing the last 12 months inflation data, so I replace these missing values with the inflation rate from the previous year. Finally, India is missing the last month's inflation rate, so I also replace it with the previous month's inflation rate.
+
+```{r, message = F, warning = F}
+# investigating monthly inflation are less than or equal to -1, which is not possible
+# 10 value of monthly inflation are less than or equal to -1, I replace them by the previous month inflation rate
+# I also replace 16 NA by the previous value
+final_data <- final_data %>% 
+  group_by(country) %>%
+  mutate(value = ifelse(value <= -1, lag(value,1), value)) %>%
+  ungroup() %>%
+  group_by(country) %>%
+  mutate(value = ifelse(value <= -1, lag(value,1), value)) %>%
+  ungroup() %>%
+  group_by(country) %>%
+  mutate(value = ifelse(value <= -1, lag(value,1), value)) %>%
+  ungroup()
+
+final_data <- final_data %>%
+  group_by(country) %>%
+  mutate(value = ifelse(is.na(value) == T & geo=="JP"  , lag(value,12) , value)) %>%
+  ungroup() %>%
+  group_by(country) %>%
+  mutate(value = ifelse(is.na(value) == T  & geo=="JP", lag(value,12) , value)) %>%
+  ungroup() %>%
+  group_by(country) %>%
+  mutate(value = ifelse(is.na(value) == T  & geo=="IN", lag(value,1) , value)) %>%
+  ungroup()
+```
+
+Now I compute the yearly inflation change from the monthly inflation change provided by the OECD inflation data using the yearly inflation calculator that I created.
+
+```{r, message = F, warning = F}
+###########Calculating yearly inflation from monthly inflation
+# First I rename the data so I can preserve the original dataset.
+model_data <- final_data
+
+# I create this function to convert the monthly inflation to yearly inflation
+# The function compute the compounded change over the last 12 months in a given value 12 months ago (here it's 1). 
+# Then return the change from the final compounded value to the value 12 months ago, which is the yearly inflation.
+yearly_inflation_calculator <- function(x){
+  #Initial value from the previous month
+  a<-1+(lag(x,1)/100)
+  
+  for (i in 2:12) {
+    a = (1+(lag(x,i)/100))*a
+  }
+  return(a-1)
+}
+
+# Using the yearly_inflation_calculator function created above, I compute the yearly inflation for each country. 
+model_data <- model_data %>% 
+  group_by(geo) %>%
+  mutate(yearly_inflation = (yearly_inflation_calculator(value))*100)%>%
+  ungroup()
+
+#Given how yearly inflation is computed, the first 12-month observations (corresponding to 2004) for each country become missing values
+#So I remove the missing inflation values here.
+model_data <- model_data %>% filter(is.na(yearly_inflation)==F) %>%
+  dplyr::select(-c(value, country)) 
+```
+
+Finally, I include the one, two, and three-month lag values of the keywords. Therefore, the final data contains 1917 observations and 125 variables detailed as:
+
+- 5 variables : yearly inflation, year, month, date, country code.
+
+- 30 variables: original 30 keywords.
+
+- 30 variables: 1-month lag of the keywords.
+
+- 30 variables: 2-month lag of the keywords.
+
+- 30 variables: 3-month lag of the keywords.
+
+I also convert the categorical variables such as year and country code into factor variables, which is necessary for the machine learning models implemented later.
+
+```{r, message = F,warning = F}
+# Adding lag variables
+model_data <- model_data %>%
+  group_by(geo)%>%
+  mutate(across(-c(year, month, date, yearly_inflation), ~lag(., n = 1 ,default = NA), .names = "lag1_{col}")) %>% #Adding 1-month lag
+  mutate(across(-c(year, month, date, yearly_inflation), ~lag(., n = 2 ,default = NA), .names = "lag2_{col}")) %>% #Adding 2 and 3 month lags
+  ungroup()
+
+# Converting categorical variables into factors.
+model_data <- model_data %>% 
+  mutate(across(-c(year, geo , month,  date,), ~as.numeric(.))) %>%
+  mutate(across(c(year, geo , month), ~as.factor(.))) %>%
+  dplyr:: select("yearly_inflation","geo", "year", "month","date", everything())
+```
+
+
+# 3 - EXPLORATORY DATA ANALYSIS 
+
+Below I plot the inflation path from 2004 to 2022 of the 9 countries selected for the study. We can see that countries in the first panel are characterized by low inflation rate compared to the countries in the second panel. After Covid-19, there is a significant increase in inflation rate across the countries except for Japan. 
+
+```{r, message = F, warning = F , fig.width = 12 , fig.height = 10, fig.align='center'}
+#average inflation by month--> boxplot of inflation by month
+# Plotting inflation rate over the years by country
+
+#Code for Panel 1
+inflation_plot1 <- model_data %>% ggplot(aes(x = date)) +
+  geom_line(data = model_data %>% filter(geo == "US"), aes( y= yearly_inflation , col = "United States")) +
+  geom_line(data = model_data %>% filter(geo == "CA"), aes( y= yearly_inflation , col = "Canada")) +
+  geom_line(data = model_data %>% filter(geo == "GB"), aes( y= yearly_inflation , col = "Great Britain")) +
+  geom_line(data = model_data %>% filter(geo == "JP"), aes( y= yearly_inflation , col = "Japan")) +
+  geom_line(data = model_data %>% filter(geo == "CH"), aes( y= yearly_inflation , col = "Switzerland"))  +
+  scale_color_manual(values = c("United States" = "black" , "Canada" = "blue", "Great Britain" = "red", "Japan" = "green" , "Switzerland" = "purple")) +
+  guides(color=guide_legend("")) +
+  theme_economist() +
+  geom_vline(aes(xintercept = lubridate::as_date("2020-03-01")), linetype = "dashed") +
+  ggplot2::annotate("text", x = lubridate::as_date("2020-03-01") , y = -2 , label = "COVID-19", size = 3 , hjust = -0.1)  +
+  xlab("Date") + ylab("Inflation rate") 
+  
+#Code for Panel 2
+inflation_plot2 <-model_data %>% ggplot(aes(x = date)) +
+  geom_line(data = model_data %>% filter(geo == "MX"), aes( y= yearly_inflation , col = "Mexico")) +
+  geom_line(data = model_data %>% filter(geo == "BR"), aes( y= yearly_inflation , col = "Brazil")) +
+  geom_line(data = model_data %>% filter(geo == "ZA"), aes( y= yearly_inflation , col = "South Africa")) +
+  geom_line(data = model_data %>% filter(geo == "IN"), aes( y= yearly_inflation , col = "India")) +
+  scale_color_manual(values = c("Mexico" = "black" , "Brazil" = "blue", "South Africa" = "red", "India" = "green")) +
+  guides(color=guide_legend("")) +
+  theme_economist() +
+  geom_vline(aes(xintercept = lubridate::as_date("2020-03-01")), linetype = "dashed") +
+  ggplot2::annotate("text", x = lubridate::as_date("2020-03-01") , y = -2 , label = "COVID-19", size = 3 , hjust = -0.1)  +
+  xlab("Date") + ylab("Inflation rate")
+
+#Combining Panel 1 and 2
+grid.arrange(inflation_plot1 , inflation_plot2 , nrow = 2 , ncol=1, top = textGrob("Inflation rate by country (2004 - 2022)", gp=gpar(fontsize=20,font=8)))
+
+```
+
+Below, I use a boxplot to show the monthly fluctuation of inflation rate across countries. The boxplots show that inflation is fairly stable across the months in all the countries. 
+
+```{r, message = F, warning = F , fig.width = 15 , fig.height = 12, fig.align='center'}
+model_data %>% 
+  ggplot(aes(y = yearly_inflation, x = month)) +
+  geom_boxplot(aes(fill = month)) +
+  facet_wrap( ~ geo, scales="free") +
+  xlab("Month") +
+  ylab("Inflation rate") +
+  #labs(title = " Monthly inflation rate fluctuation by country ")
+  theme(
+    legend.key=element_blank(), 
+    axis.text.x = element_text(colour = "black", size = 17, face = "bold", vjust = 0.3, hjust = 1), 
+    axis.text.y = element_text(colour = "black", face = "bold", size = 15), 
+    legend.text = element_text(size = 15, face ="bold", colour ="black"), 
+    legend.title = element_text(size = 15, face = "bold"), 
+    plot.title = element_text(size=42),
+    axis.title = element_text(size = 20, face ="bold", colour ="black"),
+    panel.background = element_blank(), panel.border = element_rect(colour = "black", fill = NA, size = 1.2), 
+    legend.position = "right")
+```
+
+Below, I plot the correlation between the keywords and the inflation rate by country. First, notice that the inflation keyword is mostly correlated to the inflation rate for the English speaking countries such as the US, Great Britain, and Canada. For these countries, the correlation between the other keywords and inflation rate is also stronger. This correlation matrix shows the limitation of collecting the keywords only from US newspapers. Although English is mostly used over the world, especially for the study of economics, the local country language can be a limitation on the search magnitudes. Moreover, the relevant keywords may differ across countries. For instance, none of the keywords are correlated to inflation rate for Japan and only a few them are correlated to inflation rate for South Africa. 
+
+```{r, message = F, warning = F , fig.width = 18 , fig.height = 14, fig.align='center'}
+
+#Computing the correlation between inflation rate and the keywords search magnitudes
+US <- model_data %>%filter(geo=="US") %>% dplyr::select(c(1:35)) %>% dplyr::select(-c(geo,date,year, month))
+US <- round(cor(US)[1,1:31, drop=FALSE],2) %>% bind_cols(tibble("geo" = "United States")) %>% dplyr::select(-c(yearly_inflation))
+
+GB<-round(model_data %>%filter(geo=="GB") %>% dplyr::select(c(1:35)) %>% dplyr::select(-c(geo,date,year, month)),2)
+GB <- cor(GB)[1,1:31, drop=FALSE] %>% bind_cols(tibble("geo" = "Great Britain")) %>% dplyr::select(-c(yearly_inflation))
+
+CA<-round(model_data %>%filter(geo=="CA") %>% dplyr::select(c(1:35)) %>% dplyr::select(-c(geo,date,year, month)),2)
+CA <- cor(CA)[1,1:31, drop=FALSE]%>% bind_cols(tibble("geo" = "Canada")) %>% dplyr::select(-c(yearly_inflation))
+
+CH<-round(model_data %>%filter(geo=="CH") %>% dplyr::select(c(1:35)) %>% dplyr::select(-c(geo,date,year, month)),2)
+CH <- cor(CH)[1,1:31, drop=FALSE] %>% bind_cols(tibble("geo" = "Switzerland")) %>% dplyr::select(-c(yearly_inflation))
+
+JP<-round(model_data %>%filter(geo=="JP") %>% dplyr::select(c(1:35)) %>% dplyr::select(-c(geo,date,year, month)),2)
+JP <- cor(JP)[1,1:31, drop=FALSE] %>% bind_cols(tibble("geo" = "Japan")) %>% dplyr::select(-c(yearly_inflation))
+
+BR<-round(model_data %>%filter(geo=="BR") %>% dplyr::select(c(1:35)) %>% dplyr::select(-c(geo,date,year, month)),2)
+BR <- cor(BR)[1,1:31, drop=FALSE] %>% bind_cols(tibble("geo" = "Brazil")) %>% dplyr::select(-c(yearly_inflation))
+
+MX<-round(model_data %>%filter(geo=="MX") %>% dplyr::select(c(1:35)) %>% dplyr::select(-c(geo,date,year, month)),2)
+MX <- cor(MX)[1,1:31, drop=FALSE] %>% bind_cols(tibble("geo" = "Mexico")) %>% dplyr::select(-c(yearly_inflation))
+
+ZA<-round(model_data %>%filter(geo=="ZA") %>% dplyr::select(c(1:35)) %>% dplyr::select(-c(geo,date,year, month)),2)
+ZA <- cor(ZA)[1,1:31, drop=FALSE] %>% bind_cols(tibble("geo" = "South Africa")) %>% dplyr::select(-c(yearly_inflation))
+
+IN<-round(model_data %>%filter(geo=="IN") %>% dplyr::select(c(1:35)) %>% dplyr::select(-c(geo,date,year, month)),2)
+IN <- cor(IN)[1,1:31, drop=FALSE] %>% bind_cols(tibble("geo" = "India")) %>% dplyr::select(-c(yearly_inflation))
+
+#Combining the correlation values
+final_corr <- bind_rows(US,GB,CA,CH,JP,BR,MX,ZA,IN) %>% pivot_longer(c(1:30)) %>%
+  mutate(value = value*100) %>% 
+  mutate(value = round(value,2)) %>%
+  mutate(name = fct_reorder(as.factor(name), value)) 
+
+#Chooding random colors
+qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
+col_vector = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
+colours = sample(col_vector, 30)
+
+#Ploting correlation bubble plot by country
+final_corr %>% ggplot(aes(y = name, x = geo )) +
+  geom_point(aes(size = value, fill = name), alpha = 0.75, shape = 21) + 
+  scale_size_continuous(limits = c(0.000001, 100), range = c(1,17), breaks = c(1,10,50,75)) + 
+  labs( title = "Correlation between search magnitude and inflation rate by country" , y= "Keyword search magnitude", x = "Inflation rate in the country", size = "Correlation (%)", fill = "")  + 
+  theme(
+    legend.key=element_blank(), 
+    axis.text.x = element_text(colour = "black", size = 17, face = "bold", angle = 90, vjust = 0.3, hjust = 1), 
+    axis.text.y = element_text(colour = "black", face = "bold", size = 15), 
+    legend.text = element_text(size = 15, face ="bold", colour ="black"), 
+    legend.title = element_text(size = 15, face = "bold"), 
+    plot.title = element_text(size=22),
+    axis.title = element_text(size = 20, face ="bold", colour ="black"),
+    #panel.background = element_blank(), panel.border = element_rect(colour = "black", fill = NA, size = 1.2), 
+    legend.position = "right") +  
+  scale_fill_manual(values = colours, guide = FALSE) + 
+  scale_y_discrete(limits = rev(levels(final_corr$geo))) 
+
+```
+
+Here I compare the inflation rate path and the path of the inflation and interest rate keywords. We can see that inflation rate trend is closer to the trend in search for inflation and interest rate keywords in the US compared to Japan. This result supports the finding from the correlation plot above.
+
+```{r, message = F, warning = F , fig.width = 10 , fig.height = 8, fig.align='center'}
+
+keyword_model_data <- model_data %>%
+  clean_names() %>%
+  mutate(inflation = as.double(inflation)) %>%
+  mutate(inflation = inflation/10) %>% 
+  mutate(interest_rate = as.double(interest_rate)/10) 
+
+#Plotting inflation and keyword path for the US
+keyword_plot1 <- keyword_model_data %>%
+  ggplot(aes(x = date)) +
+  geom_line(data = keyword_model_data %>% filter(geo == "US"), aes( y= yearly_inflation , col = "inflation rate")) +
+  geom_line(data = keyword_model_data %>% filter(geo == "US"), aes( y= inflation , col = "inflation keyword")) +
+  geom_line(data = keyword_model_data %>% filter(geo == "US"), aes( y = interest_rate , col = "interest rate keyword")) +
+  scale_color_manual(values = c("inflation rate" = "black", "inflation keyword" = "red" , "interest rate keyword" = "blue")) +
+  guides(color=guide_legend("")) +
+  theme_classic() +
+  ylab("") +
+  geom_vline(aes(xintercept = lubridate::as_date("2020-03-01")), linetype = "dashed") +
+  ggtitle(str_wrap(paste("Country = ", "UNITED STATES"), 55)) +
+  ggplot2::annotate("text", x = lubridate::as_date("2020-03-01") , y = -2 , label = "COVID-19", size = 3 , hjust = -0.1)  +
+  xlab("Date")
+
+#Plotting inflation and keyword path for the Japan
+keyword_plot2 <- keyword_model_data %>%
+  ggplot(aes(x = date)) +
+  geom_line(data = keyword_model_data %>% filter(geo == "JP"), aes( y= yearly_inflation , col = "inflation rate")) +
+  geom_line(data = keyword_model_data %>% filter(geo == "JP"), aes( y= inflation , col = "inflation keyword")) +
+  geom_line(data = keyword_model_data %>% filter(geo == "JP"), aes( y = interest_rate , col = "interest rate keyword")) +
+  scale_color_manual(values = c("inflation rate" = "black", "inflation keyword" = "red" , "interest rate keyword" = "blue")) +
+  guides(color=guide_legend("")) +
+  theme_classic() +
+  ylab("") +
+  geom_vline(aes(xintercept = lubridate::as_date("2020-03-01")), linetype = "dashed") +
+  ggtitle(str_wrap(paste("Country = ", "JAPAN"), 55)) +
+  ggplot2::annotate("text", x = lubridate::as_date("2020-03-01") , y = -2 , label = "COVID-19", size = 3 , hjust = -0.1)  +
+  xlab("Date")
+
+#Comparing both panels
+grid.arrange(keyword_plot1 , keyword_plot2 , nrow = 2 , ncol=1, top = textGrob("Inflation rate Vs Keyword Search Magnitude", gp=gpar(fontsize=20,font=8)))
+
+
+```
+
+
+# 4 - MACHINE LEARNING
+
+The first step is to split the data into a training and testing set. Because my data is time series, it's hard to split the data randomly. Thus, I split the data into 3 parts. First I randomly select 3 countries from the 9 countries and use these as my first test set. My second test set contains the values after 2017 from the remaining 6 countries that were not randomly chosen. Thus, my training set contains values from the remaining 6 countries that were not randomly chosen and before 2017. 
+
+Because I fixed the seed at the beginning of the study, the results are replicable. Given the seed I selected, the 3 randomly chosen countries for the test set are: South Africa (ZA), Great Britain (GB), and Mexico (MX). 
+
+Thus, every model is first trained on the data with the 6 countries before 2017, then the performance of the model is evaluated using the two different test sets.  
+
+```{r , message = F, warning = F }
+set.seed(0)
+# Selecting 3 countries randomly.
+ distinct_countries <- model_data %>% distinct(geo)
+ random_country_test <-  sample( distinct_countries$geo , 3, replace = F)
+ random_country_test
+
+ 
+# Selecting the training set
+model_data_train <- model_data %>% 
+  filter(as.character(year) <= 2017) %>% 
+  filter(!(geo %in% random_country_test))
+
+# Selecting the test set for data after 2017
+model_data_test  <- model_data %>% 
+  filter(as.character(year)  > 2017) %>% 
+  filter(!(geo %in% random_country_test))
+
+# Selecting the test set for the 3 countries randomly selected
+model_data_test_country  <- model_data %>% 
+  filter(geo %in% random_country_test)
+```
+
+After splitting the data into training and test sets, I create the cross validation folds on the training set. I choose the common number of folds equal to 10 and stratify over countries. 
+
+```{r , message = F, warning = F}
+#cross validation folds stratified over countries
+model_data_folds <- vfold_cv(model_data_train, v=10, strata = geo)
+```
+
+The procedure of estimating the models follows the steps below:
+
+- for each model, the hyperparameters are tuned using the cross validation folds. 
+
+- the hyperparameters giving the lowest RMSE (Root Mean Square Error) are chosen for each model. 
+
+- each model with the optimal hyperparameters is fitted on the training set to get the training RMSE. 
+
+- Although it is common practice to only fit the model with the lowest training RMSE to the testing set, I fit all the models to the test set from comparison purposes. 
+
+The following 5 models are going to be estimated with their respective hyperparameters to be tuned with cross validation:
+
+- Polynomial regression 
+
+- - degree: polynomial degree
+
+- boosted tree 
+
+- - trees: number of trees
+
+- random forest 
+
+- - mtry = number of predictors that will be randomly sampled at each split when creating tree models.
+
+- - trees = the number of trees.
+
+- - min_n = minimum number of data points in a node that are required for the node to be split further.
+
+- KNN regression 
+
+- - neighbors = number of neighbors.
+
+- ridge/lasso regression 
+
+- - mixture = mixture of 0 gives Ridge regression, mixture of 1 gives Lasso regression, and mixture between 0 and 1 gives a mixture of both
+
+- - penalty = penalty parameter.
+
+## 4 - a) Polynomial Regression
+
+```{r , message = F, warning = F}
+#POLYNOMIAL REGRESSION MODEL - INCLUDING GOOGLE TREND PREDICTORS
+
+#Creating the recipe
+poly_reg_rec <- recipe(yearly_inflation ~ ., data = model_data_train) %>%
+  step_rm(date) %>% #removing date from the set of predictors
+  step_impute_mean(-c(year, geo , month, yearly_inflation)) %>% #imputing the means for missing values
+  step_dummy(year, geo , month) %>% #create dummy variables for year, geo, and month
+  step_zv(all_predictors()) %>% #remove variable with zero variance
+  step_center(all_predictors()) %>% #normalize the data to have a mean of 0
+  step_scale(all_predictors())  %>% #normalize the data to have a standard deviation of 1
+  step_poly(c(inflation:lag2_investors), degree = tune()) #tuning the polynomial degrees
+
+#creating the linear model
+lm_model <- linear_reg() %>% set_mode("regression") %>% set_engine("lm")
+
+#workflow: combining the linear model and the recipe
+poly_reg__wf <- workflow() %>%
+  add_recipe(poly_reg_rec) %>%
+  add_model(lm_model) #lm_model was created in previous section.
+```
+
+```{r , message = F, warning = F, eval = F}
+#grid of polynomial degrees to be chosen when tuning the polynomial degree. Here it's between 1 and 5.
+degree_grid <- grid_regular(degree(range = c(1,5)), levels = 5)
+
+#tuninf the model with cross validation
+tune_res <- tune_grid(
+  object = poly_reg__wf,
+  resamples = model_data_folds,
+  grid = degree_grid)
+
+#saving the results do I do not have to run it again when knitting
+saveRDS(tune_res, file="./saved_Rdata/tune_res_poly_saved.RData")
+```
+
+To estimate the polynomial regression, I first create a recipe for the model. A recipe is the set of predictors and the different changes applied to that set before estimating the model. For the polynomial regression recipe, first I remove the date from the set of predictors. Then given that I included lag value for the keywords which creates missing values, I impute the means of the variables for the missing values created by the lags. I also create dummy variables for the country, month, and year, and I normalize the predictors. I also include the polynomial degrees of the predictors in the recipe, and the optimal degree will be tuned using cross validation. For the cross validation, I choose the degree polynomial that gives the lowest RMSE for degrees between 1 and 5. This recipe results in the following model to be estimated: 
+
+$$ Inflation_{cmy} = \sum_{r=0}^{R=3}X_{c(m-r)y} \beta_r  + \sum_{r=0}^{R=3}X_{c(m-r)y}^{p} \gamma_r  + \alpha Country_{my} + \delta Month_{cy}+ \theta Year_{my} + \epsilon_{cmy} (2)$$
+where: 
+
+$Inflation_{cmy} = \text{percent change in price in country c in month m in year y compared to prices from a year ago}$
+$X_{c(m-r)y} = \text{a vector of search magnitude from Google Trend of different inlfation keywords in county c in month m in year y lagged by some month r.}$ 
+$\text{Maximum lag is R = 3 (3-month lag). p on } X_{c(m-r)y}^{p} \text{ is the parameter to be tuned}$
+$\text{Country, Month, Year} = \text{dummy variables for Country, Month, and Year}$
+
+The cross validation RMSE and R square of each degree polynomials are shown in the graph below We can see that degree equal to 2 gives the lowest cross validationRMSE. Thus, using the degree polynomial of 2, I fit the training data to the training and the two different test sets  and compute the training and test RMSEs. The training and test sets definition are described again below:
+
+- test set 1: 3 randomly selected countries out of the 9 original countries.
+
+- test set 2: data after 2017 from the 6 countries not selected in test set 1.
+
+- training set: data before 2017 from the 6 countries not selected in test set 1.
+
+```{r , message = F, warning = F, fig.align='center'}
+#Plotting RMSE for each degree polynomial
+tune_res_poly_saved <- readRDS("./saved_Rdata/tune_res_poly_saved.RData")
+autoplot(tune_res_poly_saved)
+
+#Polynomial degree giving the lowest RMSE
+best_poly <-select_best(tune_res_poly_saved, metric = "rmse")
+
+paged_table(best_poly, options = list(rows.print = 15, cols.print = 5))
+
+```
+
+The training RMSE is 0.83, the test RMSE on test set 1 is 3.85, and the test RMSE on test set 2 is 3.17. It is expected that the model performs best on the training set, and that test set 1 has the highest RMSE.
+
+```{r , message = F, warning = F}
+#Creating final workflow with the best parameter (p=2)
+poly_reg_model_final <- finalize_workflow(poly_reg__wf,best_poly)
+
+#fitting the model on the training data
+poly_reg_model_final_fit <- fit(poly_reg_model_final, data = model_data_train)
+
+#Computing RMSE for the trainin and test sets
+training_RMSE_poly <- augment(poly_reg_model_final_fit, new_data = model_data_train) %>% rmse(truth = yearly_inflation, estimate = .pred)
+paged_table(training_RMSE_poly, options = list(rows.print = 15, cols.print = 5))
+
+test_set1_RMSE_poly <- augment(poly_reg_model_final_fit, new_data = model_data_test_country) %>% rmse(truth = yearly_inflation, estimate = .pred)
+
+paged_table(test_set1_RMSE_poly, options = list(rows.print = 15, cols.print = 5))
+
+
+test_set2_RMSE_poly <- augment(poly_reg_model_final_fit, new_data = model_data_test) %>% rmse(truth = yearly_inflation, estimate = .pred)
+
+paged_table(test_set2_RMSE_poly, options = list(rows.print = 15, cols.print = 5))
+
+
+```
+
+
+Because degree polynomial p=2 gives the lowest RMSE on the training set, I use p=2 on for the recipe of the later models.
+
+
+## 4 - b) Ridge/Lasso
+In this section, equation 2 is estimated with a recipe using degree of polynomial p = 2 using Ridge/Lasso. The hyperparameters to be tuned are the mixture and penalty parameters. A mixture of 0 gives the Ridge regression, a mixture of 1 gives Lasso regression, and a mixture between 0 and 1 gives a mixture of both. The steps are the same as above: creating a recipe, setting the model, putting the model and the recipe in the same workflow, and tuning the parameter on the cross validation folds.
+
+```{r , message = F, warning = F}
+boost_recipe <- recipe(yearly_inflation ~ ., data = model_data_train) %>%
+  step_rm(date) %>%
+  step_impute_mean(-c(year, geo , month, yearly_inflation)) %>%
+  step_dummy(year, geo , month) %>%
+  step_zv(all_predictors()) %>%
+  step_center(all_predictors()) %>%
+  step_scale(all_predictors())  %>%
+  step_poly(c(inflation:lag2_investors), degree = 2)
+
+
+ridge_model <- linear_reg(penalty = tune(), mixture = tune()) %>% 
+  set_mode("regression") %>% 
+  set_engine("glmnet")
+
+ridge_workflow <- workflow() %>% 
+  add_recipe(boost_recipe) %>% 
+  add_model(ridge_model)
+```
+
+```{r , message = F, warning = F, eval = F}
+#Creating regular grids 
+ridge_grid <- grid_regular(penalty(range = c(-5,5)), mixture(range = c(0,1)) , levels = 10)
+
+tune_res_ridge <- tune_grid(
+  ridge_workflow,
+  resamples = model_data_folds,
+  grid = ridge_grid
+)
+
+#Save tune_res_ridge as an R object to not run it again when knitting
+saveRDS(tune_res_ridge, file="./saved_Rdata/tune_res_ridge_saved.RData")
+```
+
+```{r , message = F, warning = F, fig.width=10}
+tune_res_ridge_saved <- readRDS("./saved_Rdata/tune_res_ridge_saved.RData")
+autoplot(tune_res_ridge_saved)
+
+best_par_ridge <- select_best(tune_res_ridge_saved, metric = "rmse")
+
+paged_table(best_par_ridge, options = list(rows.print = 15, cols.print = 5))
+
+
+```
+
+We can see that lower mixture and penalty gives the lowest RMSE. The optimal penalty value is 0.0215 and the optimal mixture is 0.222. Thus, these parameters are used to fit the Ridge/Lasso on the training and the test sets.
+
+```{r , message = F, warning = F}
+#Setting workflow with the best parameters
+ridge_final_wf <- finalize_workflow(ridge_workflow, best_par_ridge)
+ridge_final_fit <- fit(ridge_final_wf, data = model_data_train)
+
+#Computing RMSE for the trainin and test sets
+training_RMSE_ridge <- augment(ridge_final_fit, new_data = model_data_train) %>% rmse(truth = yearly_inflation, estimate = .pred)
+
+paged_table(training_RMSE_ridge, options = list(rows.print = 15, cols.print = 5))
+
+
+test_set1_RMSE_ridge <- augment(ridge_final_fit, new_data = model_data_test_country) %>% rmse(truth = yearly_inflation, estimate = .pred)
+
+paged_table(test_set1_RMSE_ridge, options = list(rows.print = 15, cols.print = 5))
+
+
+test_set2_RMSE_ridge <- augment(ridge_final_fit, new_data = model_data_test) %>% rmse(truth = yearly_inflation, estimate = .pred)
+
+paged_table(test_set2_RMSE_ridge, options = list(rows.print = 15, cols.print = 5))
+
+```
+
+The training MSE is 0.89, the test RMSE on test set 1 is 3.38, and the test RMSE on test set 2 is 2.57. Notice that Ridge/Lasso is doing better than polynomial regression on the test sets. It is also expected that the model performs best on the training set, and that test set 1 has the highest RMSE. 
+
+## 4 - c) KNN Regression
+In this section, equation 2 is estimated with a recipe using degree of polynomial p = 2 using a KNN regression. The hyperparameter to be tuned is the number of neighbors to be chosen. The steps are similar to the steps used to evaluate the previous models. 
+
+```{r , message = F, warning = F}
+knn_model <- nearest_neighbor()  %>% set_mode("regression") %>% set_engine("kknn") %>%
+  set_args(neighbors = tune())
+
+knn_workflow <- workflow() %>%  add_model(knn_model) %>%  add_recipe(boost_recipe)
+```
+
+```{r , message = F, warning = F, eval = F}
+knn_degree_grid <- grid_regular(neighbors(range = c(1,50)), levels = 25) 
+
+tune_res_knn <- tune_grid(
+  object = knn_workflow, 
+  resamples = model_data_folds, 
+  grid = knn_degree_grid)
+
+#Save tune_res_knn as an R object to not run it again when knitting
+saveRDS(tune_res_knn, file="./saved_Rdata/tune_res_knn_saved.RData")
+```
+
+```{r, message = F, warning = F}
+tune_res_knn_saved <- readRDS("./saved_Rdata/tune_res_knn_saved.RData")
+autoplot(tune_res_knn_saved)
+
+best_par_knn <- select_best(tune_res_knn_saved, metric = "rmse")
+
+paged_table(best_par_knn, options = list(rows.print = 15, cols.print = 5))
+
+```
+
+We can see that as the number of number of nearest neighbors increases, the validation RMSE decreases sharply and then increases sharply. The lowest RMSE is realized at the number of neighbors k = 7
+
+```{r, message = F, warning = F}
+knn_final_wf <- finalize_workflow(knn_workflow, best_par_knn)
+knn_final_fit <- fit(knn_final_wf, data = model_data_train)
+
+training_RMSE_knn <- augment(knn_final_fit, new_data = model_data_train) %>% rmse(truth = yearly_inflation, estimate = .pred)
+
+paged_table(training_RMSE_knn, options = list(rows.print = 15, cols.print = 5))
+
+
+test_set1_RMSE_knn <- augment(knn_final_fit, new_data = model_data_test_country) %>% rmse(truth = yearly_inflation, estimate = .pred)
+
+paged_table(test_set1_RMSE_knn, options = list(rows.print = 15, cols.print = 5))
+
+
+test_set2_RMSE_knn <- augment(knn_final_fit, new_data = model_data_test) %>% rmse(truth = yearly_inflation, estimate = .pred)
+
+paged_table(test_set2_RMSE_knn, options = list(rows.print = 15, cols.print = 5))
+
+```
+
+The training MSE is 0.453, the test RMSE on test set 1 is 2.79, and the test RMSE on test set 2 is 2.11. Notice that KNN performs better than both the polynomial and the Ridge/Lasso regressions on the test sets. Similar to earlier results, the model performs best on the training set, and  test set 1 has the highest RMSE.
+
+## 4 - d) Boosted Tree
+
+In this section, equation 2 is estimated with a recipe using degree of polynomial p = 2 using a boosted tree. The hyperparameter to be tuned is the number of trees implemented in the model. The steps are the same as above: setting the model, putting the model and the recipe in the same workflow, and tuning the parameter on the cross validation folds.
+
+```{r , message = F, warning = F}
+boost_spec <- boost_tree(trees = tune()) %>%
+  set_engine("xgboost") %>%
+  set_mode("regression")
+
+#Setting up workflow
+boost_wf <- workflow() %>%
+  add_model(boost_spec) %>%
+  add_recipe(boost_recipe)
+```
+
+```{r , message = F, warning = F, eval = F}
+#Creating regular grids 
+boosted_grid <- grid_regular(trees(range = c(10,2000)), levels = 10)
+
+#tuning the Boosted model
+tune_res_boosted <- tune_grid(
+  boost_wf,
+  resamples = model_data_folds,
+  grid = boosted_grid
+)
+
+saveRDS(tune_res_boosted, file="./saved_Rdata/tune_res_boosted_saved.RData")
+
+```
+
+
+```{r , message = F, warning = F}
+tune_res_boosted_saved <- readRDS("./saved_Rdata/tune_res_boosted_saved.RData")
+autoplot(tune_res_boosted_saved)
+
+best_par_boost <- select_best(tune_res_boosted_saved, metric = "rmse")
+
+paged_table(best_par_boost, options = list(rows.print = 15, cols.print = 5))
+
+```
+
+We can see that the validation RMSE drops sharply as the number of trees increase but then converges when the number of tress is high. The optimal number of trees that gives the lowest RMSE is 231. Thus, a boosted tree with a parameter equal to 231 is fitted on the training set and test set 1 and 2. 
+
+```{r , message = F, warning = F}
+boost_final_wf <- finalize_workflow(boost_wf, best_par_boost)
+boost_final_fit <- fit(boost_final_wf, data = model_data_train)
+
+training_RMSE_boost <- augment(boost_final_fit, new_data = model_data_train) %>% rmse(truth = yearly_inflation, estimate = .pred)
+
+paged_table(training_RMSE_boost, options = list(rows.print = 15, cols.print = 5))
+
+
+test_set1_RMSE_boost <- augment(boost_final_fit, new_data = model_data_test_country) %>% rmse(truth = yearly_inflation, estimate = .pred)
+
+paged_table(test_set1_RMSE_boost, options = list(rows.print = 15, cols.print = 5))
+
+
+test_set2_RMSE_boost <- augment(boost_final_fit, new_data = model_data_test) %>% rmse(truth = yearly_inflation, estimate = .pred)
+
+paged_table(test_set2_RMSE_boost, options = list(rows.print = 15, cols.print = 5))
+
+```
+
+The training MSE is 0.000625, the test RMSE on test set 1 is 2.82, and the test RMSE on test set 2 is 2.67. Boosted tree perform less compared to KNN on the test sets. Similar to earlier results, the model performs best on the training set, and  test set 1 has the highest RMSE.
+
+## 4 - e) Random Forest
+
+In this section, equation 2 is estimated with a recipe using degree of polynomial p = 2 using random forest. The hyperparameters to be tuned are:
+
+- - mtry = number of predictors that will be randomly sampled at each split when creating tree models.
+
+- - trees = the number of trees.
+
+- - min_n = minimum number of data points in a node that are required for the node to be split further.
+
+The steps are similar to the steps used to evaluate the previous models. 
+
+```{r , message = F, warning = F}
+#setting up random forest model
+rf_spec <- rand_forest(mtry = tune(),trees = tune(), min_n = tune() ) %>%
+  set_engine("ranger", importance = "impurity") %>%
+  set_mode("regression")
+
+#setting up workflow
+rf_wf <- workflow() %>%
+  add_model(rf_spec) %>%
+  add_recipe(boost_recipe)
+
+```
+
+```{r , message = F, warning = F , eval = F}
+#Creating regular grids 
+max_mtry = ncol(model_data_train) - 5
+rf_grid <- grid_regular(mtry(range = c(1,max_mtry)), trees(range = c(1000,4000)), min_n(range = c(10,100)), levels = 10)
+
+tune_res_rf <- tune_grid(
+  rf_wf,
+  resamples = model_data_folds,
+  grid = rf_grid
+)
+
+#Save tune_res_rf as an R object to not run it again when knitting
+saveRDS(tune_res_rf, file="./saved_Rdata/tune_res_rf_saved.RData")
+```
+
+```{r , message = F, warning = F, fig.width=16}
+tune_res_rf_saved <- readRDS("./saved_Rdata/tune_res_rf_saved.RData")
+autoplot(tune_res_rf_saved)
+
+best_par_rf <- select_best(tune_res_rf_saved, metric = "rmse")
+
+paged_table(best_par_rf, options = list(rows.print = 15, cols.print = 5))
+
+
+```
+
+We can see that as the number of randomly selected predictors mtry increases the validation RMSE  decreases. On the other hand, the RMSE seems to converge given that number of trees selected for the validation are very high. The RMSE increases as the number of min_n is increasing. The optimal parameters are: mtry = 120, trees = 1666, and min_n = 10
+
+```{r , message = F, warning = F}
+rf_final_wf <- finalize_workflow(rf_wf, best_par_rf)
+rf_final_fit <- fit(rf_final_wf, data = model_data_train)
+
+training_RMSE_rf <- augment(rf_final_fit, new_data = model_data_train) %>% rmse(truth = yearly_inflation, estimate = .pred)
+
+paged_table(training_RMSE_rf, options = list(rows.print = 15, cols.print = 5))
+
+
+test_set1_RMSE_rf <- augment(rf_final_fit, new_data = model_data_test_country) %>% rmse(truth = yearly_inflation, estimate = .pred)
+
+paged_table(test_set1_RMSE_rf, options = list(rows.print = 15, cols.print = 5))
+
+
+test_set2_RMSE_rf <- augment(rf_final_fit, new_data = model_data_test) %>% rmse(truth = yearly_inflation, estimate = .pred)
+
+paged_table(test_set2_RMSE_rf, options = list(rows.print = 15, cols.print = 5))
+
+```
+
+The training MSE is 0.39, the test RMSE on test set 1 is 2.47, and the test RMSE on test set 2 is 2.37. Random forest performs better than boosted tree on the test sets. Similar to earlier results, the model performs best on the training set, and  test set 1 has the highest RMSE
+
+## 4 - f) Model Results Discussion
+
+Below, I compare the RMSE on the training and the test sets of each models. Boosted tree has the lowest RMSE on the training data, KNN has the lowest RMSE on test set 1 and random forest has the lowest RMSE on test set 2. Notice that as the model gets more flexible, the RMSE on the test and training sets decreases. The common practice is to choose boosted tree going forward because boosted tree has the lowest RMSE on the training set. However, I am going to continue with random forest because random forest performs reasonably well compared to the other models on the test sets.
+
+```{r , message = F, warning = F, fig.align='center'}
+models <- c("Polynomial Reg", "Ridge/Lasso", "KNN", "Boosted Tree", "Random Forest")
+train_rmse <- c(training_RMSE_poly$.estimate , training_RMSE_ridge$.estimate , training_RMSE_knn$.estimate , training_RMSE_boost$.estimate , training_RMSE_rf$.estimate)
+
+test_set1_rmse <- c(test_set1_RMSE_poly$.estimate ,test_set1_RMSE_ridge$.estimate , test_set1_RMSE_knn$.estimate , test_set1_RMSE_boost$.estimate , test_set1_RMSE_rf$.estimate)
+
+test_set2_rmse <- c(test_set2_RMSE_poly$.estimate ,test_set2_RMSE_ridge$.estimate , test_set2_RMSE_knn$.estimate , test_set2_RMSE_boost$.estimate , test_set2_RMSE_rf$.estimate)
+
+rmse_tibble <- tibble(models , "training_rmse" = round(train_rmse,2) , "test1_rmse" =  round(test_set1_rmse,2) , "test2_rmse" =  round(test_set2_rmse,2)) %>%
+  mutate(models = factor(models, levels = c("Polynomial Reg", "Ridge/Lasso", "KNN", "Boosted Tree", "Random Forest")))
+
+rmse_tibble %>% ggplot(aes(x = models)) +
+  geom_point(aes(y = training_rmse , color = "training_rmse")) + 
+  geom_line (aes(y = training_rmse , color = "training_rmse", group = 1)) + 
+  geom_point(aes(y = test1_rmse , color = "test1_rmse")) + 
+  geom_line(aes(y = test1_rmse , color = "test1_rmse", group = 1)) +
+  geom_point(aes(y = test2_rmse , color = "test2_rmse")) +
+  geom_line(aes(y = test2_rmse , color = "test2_rmse", group = 1)) +
+  scale_color_manual(values = c("training_rmse" = "blue", "test1_rmse" = "green", "test2_rmse" = "red")) +
+  guides(color=guide_legend("Legend")) +
+  xlab("Flexibility") + ylab("RMSE") + 
+  ggtitle("Comparing model RMSE") + 
+  labs(caption = "Note: test1 is the set with 3 randomly selected countries and test2 is the set of data after 2017", hjust = -10) +
+  theme_light()
+```
+
+
+Here, I compare how the predictions from random forest (the best model) and polynomial regression (the worst model) on test set 2, the set after 2017 on the countries not randomly selected for test set 1. Betwee 2017 and the Covid-19 period starting in 2020, random forest performs fairly well across the countries in predicting inflation path. However, the Covid-19 period starting in 2020 which had adverse effects on inflation path, the performance of the model is not very good. This result is not surprising given that the keywords collected were between 2015 and 2017, which provide no information on the Covid-19 period. So the model has no predictive power based on the Covid-19 shock This plot also shows the difference in performance between the polynomial regression and random forest. Although they fairly follow the path in the training set, random forest's prediction is a lot better on the test set.
+
+```{r , message = F, warning = F, fig.width = 14 , fig.height = 14}
+model_data_train_res <- predict(poly_reg_model_final_fit, new_data = model_data_train %>% dplyr::select(-yearly_inflation)) 
+model_data_train_res <- bind_cols(model_data_train_res, model_data_train %>% 
+                            dplyr::select(yearly_inflation, date, geo))  %>% 
+                            dplyr::select(yearly_inflation,.pred, date, geo)
+
+model_data_test_res <- augment(poly_reg_model_final_fit, new_data = model_data_test) %>% 
+  dplyr::select(yearly_inflation,.pred, date, geo)
+final_res <- bind_rows(model_data_train_res, model_data_test_res)
+
+model_data_train_res3 <- predict(rf_final_fit, new_data = model_data_train %>% dplyr::select(-yearly_inflation)) 
+model_data_train_res3 <- bind_cols(model_data_train_res3, model_data_train %>% 
+  dplyr::select(yearly_inflation, date, geo))  %>% 
+  dplyr::select(yearly_inflation,.pred, date, geo)
+
+model_data_test_res3 <- augment(rf_final_fit, new_data = model_data_test) %>% dplyr::select(yearly_inflation,.pred, date, geo)
+final_res3 <- bind_rows(model_data_train_res3, model_data_test_res3)
+
+plot_poly_rf <- function(country_code){
+  final_res %>% filter(geo == country_code) %>%
+  ggplot(aes(x=date, y = yearly_inflation)) +
+  geom_line(aes(col = "True value")) +
+  geom_line(aes(x=date, y = .pred, col = "polynomial regression")) +
+  geom_line(data = final_res3 %>% filter(geo == country_code) , aes(x = date, y = .pred, col = "random forest")) +
+  scale_color_manual(values = c("True value" = "black" , "polynomial regression" = "blue", "random forest" = "red")) +
+  guides(color=guide_legend("")) +
+  theme_economist() +
+  geom_vline(aes(xintercept = lubridate::as_date("2017-01-01")), linetype = "dashed") +
+  ggplot2::annotate("text", x = lubridate::as_date("2017-01-01") , y = -0.5 , label = "TEST SET 2 \nAFTER 2017", size = 3 , hjust = -0.1)  +
+  geom_vline(aes(xintercept = lubridate::as_date("2020-03-01")), linetype = "dashed") +
+  ggplot2::annotate("text", x = lubridate::as_date("2020-03-01") , y = -0.8 , label = "COVID-19", size = 3 , hjust = -0.1)  +
+  labs( caption = "Note:  Test set 2 is the set of data after 2017", hjust = -10) +
+  xlab("Date") + ylab("Inflation rate") + ggtitle(str_wrap(paste("Country = ", country_code), 55))
+}
+
+country_code_list <- model_data_train %>% dplyr::select(geo) %>% distinct(geo)
+
+list_plot <- lapply(as.character(country_code_list$geo), plot_poly_rf)
+
+grid.arrange(list_plot[[1]], list_plot[[2]], list_plot[[3]], list_plot[[4]], list_plot[[5]], list_plot[[6]], nrow = 3 , ncol=2, top = textGrob("Comparing predicted values from Random Forest  and Polynomial Regression On Test Set 2 \n (BR = Brazil / CA = Canada  CH = Switzerland / IN = India / JP = Japan / US = United States)", gp=gpar(fontsize=20,font=8)))
+
+```
+
+The inflation path on test set 1, which contains the 3 randomly chosen countries, is represented in the graphs below. We can noteice that the performance of the models on prediciting inflation path is not very good. This result is  expected given that this test set is relatively large compared to test 2. 
+
+```{r, message = F, warning = F, fig.width = 14 , fig.height = 14}
+
+final_res_country3 <- augment(rf_final_fit, new_data = model_data_test_country) %>% dplyr::select(yearly_inflation,.pred, date, geo)
+final_res_country <- augment(poly_reg_model_final_fit, new_data = model_data_test_country) %>% dplyr::select(yearly_inflation,.pred, date, geo)
+
+plot_poly_rf2 <- function(country_number){
+final_res_country %>% filter(geo == random_country_test[country_number]) %>%
+  ggplot(aes(x=date, y = yearly_inflation)) +
+  geom_line(aes(col = "True value")) +
+  geom_line(aes(x= date, y = .pred, col = "polynomial regression")) +
+  geom_line(data = final_res_country3 %>% filter(geo == random_country_test[country_number]) , aes(x = date, y = .pred, col = "random forest")) +
+  scale_color_manual(values = c("True value" = "black" , "polynomial regression" = "blue", "random forest" = "red")) +
+  guides(color=guide_legend("")) +
+  theme_economist() +
+  labs( caption = "Note:  Test set 1 is the set of the 3 countries randomly selected", hjust = -10) +
+  xlab("Date") + ylab("Inflation rate") + ggtitle(str_wrap(paste("Country = ", random_country_test[country_number]), 55))
+}
+
+list_plot2 <- lapply(c(1:3), plot_poly_rf2)
+
+grid.arrange(list_plot2[[1]], list_plot2[[2]], list_plot2[[3]], nrow = 3 , ncol=1, top = textGrob("Comparing predicted values from Random Forest  and Polynomial Regression On Test Set 1 \n (ZA = South Africa / GB = Great Britain / MX = Mexico)", gp=gpar(fontsize=20,font=8)))
+```
+
+Next, because some of the models overestimate the inflation rate and other underestimates it, I take the average prediction of the models and compare it to the performance of random forest. Although the average prediction does slightly better than random forest for Great Britain, overall, the prediction is not very good 
+
+```{r, message = F, warning = F, fig.width = 14 , fig.height = 14}
+final_res_country <- augment(poly_reg_model_final_fit, new_data = model_data_test_country) %>% dplyr::select(yearly_inflation,.pred, date, geo)
+
+final_res_country2 <- augment(ridge_final_fit, new_data = model_data_test_country) %>% dplyr::select(yearly_inflation,.pred, date, geo)
+
+final_res_country3 <- augment(knn_final_fit, new_data = model_data_test_country) %>% dplyr::select(yearly_inflation,.pred, date, geo)
+
+final_res_country4 <- augment(boost_final_fit, new_data = model_data_test_country) %>% dplyr::select(yearly_inflation,.pred, date, geo)
+
+final_res_country5 <- augment(rf_final_fit, new_data = model_data_test_country) %>% dplyr::select(yearly_inflation,.pred, date, geo)
+
+final <- final_res_country %>% left_join(final_res_country2 %>% dplyr::select(-c(yearly_inflation)),  by = c("geo"="geo", "date"="date")) %>%
+  left_join(final_res_country3 %>% dplyr::select(-c(yearly_inflation)),  by = c("geo"="geo", "date"="date")) %>% 
+  left_join(final_res_country4 %>% dplyr::select(-c(yearly_inflation)),  by = c("geo"="geo", "date"="date")) %>% 
+  left_join(final_res_country5 %>% dplyr::select(-c(yearly_inflation)),  by = c("geo"="geo", "date"="date"))
+
+df <- final %>% dplyr::select(.pred, .pred.x,.pred.y,.pred.x.x,.pred.y.y)
+
+final <- final %>% 
+  mutate(average_prediction = apply(df, 1, mean)) %>%
+  dplyr::select(yearly_inflation, date, geo ,average_prediction)
+
+plot_poly_rf3 <- function(country_number){
+final %>% filter(geo == random_country_test[country_number]) %>% ggplot(aes(x = date)) +
+  geom_line(aes(y = yearly_inflation, col =  "True value")) +
+  geom_line(aes(y = average_prediction , col = "Average predicted values by the 5 models")) +
+  geom_line(data = final_res_country5 %>% filter(geo == random_country_test[country_number]) , aes(y = .pred , col = "Random forest")) +
+  scale_color_manual(values = c("True value" = "black" , "Average predicted values by the 5 models" = "blue", "Random forest" = "red")) +
+  guides(color=guide_legend("")) +
+  theme_economist() +
+  labs( caption = "Note:  Test set 1 is the set of the 3 countries randomly selected", hjust = -10) +
+  xlab("Date") + ylab("Inflation rate") + ggtitle(str_wrap(paste("Country = ", random_country_test[country_number]), 55))
+}
+
+list_plot3 <- lapply(c(1:3), plot_poly_rf3)
+
+grid.arrange(list_plot3[[1]], list_plot3[[2]], list_plot3[[3]], nrow = 3 , ncol=1, top = textGrob("Comparing average predicted values from 5 models  and random forest On Test Set 1 \n (ZA = South Africa / GB = Great Britain / MX = Mexico)", gp=gpar(fontsize=20,font=8)))
+
+# test_set1_RMSE_avg <- augment(rf_final_fit, new_data = final%>%left_join(model_data_test_country, by = c("geo"="geo", "date"="date"))) %>% rmse(truth = yearly_inflation.x, estimate = average_prediction)
+# test_set1_RMSE_avg
+```
+
+On test set 1, the models predict the inflation path of the 3 randomly chosen countries from 2004 to 2022, which is a relatively hard task compared to the estimation in test set 2 for various reasons. First, compared to test set 2, there is no prior information of inflation path from the 3 countries included in the model. Moreover, the time frame is very long, which implies that several shocks that can inflation rate from the different countries are left unaccounted in the models. This issue portrays the limitation of only using US newspapers to select the keywords, which generally does not account for the major events that can affect inflation trend in the other countries. Finally, given that most countries already have some prior information on inflation trend, results from test set 2 are more important and more realistic.
+
+# 5 - Conclusion
+
+This project conducts an analysis of predicting inflation rate of various countries using Google Trend search data on different keywords related to inflation. The keywords were chosen using the most repeated words from various articles related to inflation published in the US. Machine learning models were implemented to conduct the predictions. Although some model adjustments are suggested for future projects, the results are promising and provide a fairly good prediction of inflation path for the set where some information on inflation is given. 
+
+
+
+
+
+
+
+
+
+
