@@ -1,7 +1,7 @@
 ---
-title: "PREDICTING INFLATION USING GOOGLE TREND SEARCH RATE"
+title: "PREDICTING INFLATION TREND USING NEWSPAPER AND GOOGLE SEARCH DATA"
 author: "Donovan Rasamoelison" 
-subtitle: "PSTAT 251 - Machine Learning Project"
+subtitle: "PSTAT 231 - Machine Learning Project" 
 date: "2022-11-19"
 output: 
   html_document:
@@ -15,33 +15,39 @@ rm(list = ls())
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Please click [here](https://github.com/Donovan-Rasamoelison/Machine_Learning_Project) for the link to the github repository of this project.
 
+Please click [here](https://github.com/Donovan-Rasamoelison/Machine_Learning_Project) for the github repository of this project.
 
 # 1 - INTRODUCTION
 
-Computing inflation rate can be a long and arduous task, especially in developing countries. It is usually a long process from sending surveys to various businesses and consumers to processing analyzing the survey data. However, current and future inflation projections are often necessary for several economic decision making entities. For instance, central banks use inflation projections to make decisions on interest rates and businesses need inflation projections when accounting for the value of their inventories and supplies. This project, by applying various machine learning models, aims to provide a current and accurate prediction of  inflation using  current search data of keywords related to inflation from Google Trend. Specifically, the main challenge is to investigate if it is possible, without any prior inflation information, to predict inflation using only Google Trend keywords. The common approach to this problem would be to estimate the following model: 
+Computing inflation rate is a long and arduous task, especially in developing countries. From sending surveys to businesses and consumers to processing and analyzing the data, the entire process can take several months in many countries. However, the current inflation projections (or even projections from the last few months) are often necessary for several economic decision making entities. For instance, central banks use inflation projections to make decisions on interest rates and businesses need inflation projections when accounting for the value of their inventories and supplies. This project, by applying various machine learning models, aims to provide a current and accurate prediction of  inflation using  current search data of keywords related to inflation from Google Trend. Specifically, the main challenge is to investigate if it is possible, without using any prior information on inflation as predictor, to predict inflation using only Google Trend keywords. The common approach to this problem would be to estimate the following model: 
 
-$$ Inflation_{t} = \sum_{s=1}^{S}\delta_sInflation_{t-s} + X_t \beta + \sum_{r=1}^{R}X_{t-r} \gamma_{r} + \epsilon_t $$
+$$ Inflation_{t} = \sum_{s=1}^{S}\delta_sInflation_{t-1-s} + X_t \beta + \sum_{r=1}^{R}X_{t-r} \gamma_{r} + \epsilon_t $$
 where: 
 
-$Inflation_{t} = \text{percent change in price in month t compared to prices from a year ago}$ 
-$Inflation_{t-s} = \text{percent change in price in month t compared to prices from a year ago lagged by some s period}$ 
+$t\text{ is the current period } \text{, } t-1 \text{ is the period with the latest inflation data available}$
+$Inflation_{t} = \text{percent change in price in month t-1 compared to prices from a year ago}$ 
+$Inflation_{t-1-s} = \text{percent change in price in month t compared to prices from a year ago lagged by some s period}$ 
 $X_t = \text{a vector of search magnitude from Google Trend of different inflation keywords}$
-$X_t = \text{a vector of search magnitude from Google Trend of different inlfation keywords lagged by some r period}$
+$X_{t-r} = \text{a vector of search magnitude from Google Trend of different inlfation keywords lagged by some r period}$
 
-However, given that the purpose of this study is to predict inflation without any prior information on inflation, the lagged inflation values are removed from the predictor set and the final model estimated will be: 
-$$ Inflation_{t} =  X_t \beta + \sum_{r=1}^{R}X_{t-r} \gamma_{r} + \epsilon_t (1)$$
+This method will only work if the goal is to predict inflation in the current period $t$, where $t-1$ is the period with the latest inflation data available. However, sometimes inflation data is missing for some $k$ periods before the current period $t$ and it is necessary to have a prediction of inflation in periods $t-k+1$, $t-k+2$,..., $t$. Thus, although it is possible to use the estimated values of inflation in period $t-k+1$ to predict inflation in period $t-k+2$, I estimate the model with the lagged values of inflation removed from the predictor set, and the final model estimated will be: 
+$$ Inflation_{i} =  X_i \beta + \sum_{r=1}^{R}X_{i-r} \gamma_{r} + \epsilon_i (1)$$
+where: 
+
+$i \in (t-k+1, ..., t) \text{ , current period } t \text{ , } \text{latest inflation data available is at some period } t-k$
+
+It is necessary to clarify that this project does not try to predict future inflation, because future search data are not available. This project tries to estimate inflation values before the current period during which the actual inflation values have not been published.
 
 Excluding the lagged values of inflation from the predictor set can worsen the prediction power of the model as prior lagged values are highly predictive of future values. The challenge is to test how much can the different machine learning models remediate for this step of removing the lagged inflation values. 
 
-This model can be useful in many ways. For instance, given that sending and processing inflation surveys can take several months, this model can be used to predict current inflation (or even inflation from the last few months) because search data are current. Moreover, the prediction from this model can also be used to provide inflation estimates from various countries where collecting inflation data is very difficult.
+This model can be useful in many ways. For instance, because sending and processing inflation surveys can take several months while Google search data are current, this model can be used to predict the inflation trend after the latest inflation data available to the current period, which can be several months in many countries. Moreover, the prediction from this model can also be used to provide inflation estimates from various countries where collecting inflation data is very difficult.
 
-To conduct the primary analysis, I first choose the relevant keywords related to inflation using newspaper articles. I scrap more than 300,000 articles between 2015 and 2017 from several US newspapers such as the New York Times and the Washington Post, and I filter out the articles that contains the word inflation in the content or in the title. Then, using the articles with the word inflation, I compute the most repeated words and use them as the keywords relevant for inflation. Unsurprisingly, the most repeated words from the articles are mostly economic terms that are widely used when discussing about inflation, such as interest rate, federal reserve, growth, market. 
+To conduct the primary analysis, I choose the relevant keywords related to inflation using newspaper data. I use scrapped data from more than 300,000 articles between 2015 and 2017 from major US newspapers such as the New York Times and the Washington Post. First, I filter out the articles that contain the word inflation in the content or in the title. Then, using the articles with the word inflation, I compute the most repeated words in the articles and use them as the keywords relevant for inflation. Unsurprisingly, the most repeated words from the articles are mostly economic terms that are widely used when discussing about inflation, such as interest rate, federal reserve, growth, market. 
 
-After identifying the keywords from the articles, I pipe the search data related to these keywords from different countries using Google Trend. The search data related to these keywords are from 2004, the time Google Trend started to record search data, to 2022. Then, I merge the search data with the country-level inflation data that I collected from the OECD website. The original inflation data I collected from the OECD website contains 43 countries, but due to time constraints, I only conducted the analysis on 9 countries that I selected as representative of different continents.
+After identifying the keywords from the articles, I pipe the search data from different countries related to these keywords using Google Trend. The search data related to these keywords are from 2004, the time Google Trend started to record search data, to 2022. Then, I merge the search data with the country-level inflation data that I collected from the OECD website. The original inflation data I collected from the OECD website contains 43 countries, but due to the time constraints in collecting the data from Google Trend, I only conducted the analysis on 9 countries that I selected as representative of different continents.
 
-Finally, I estimate equation (1) using 5 different Machine Learning (ML) models: polynomial regression, Ridge/Lasso regression, KNN regression, boosted tree, and random forest. To estimate these ML models, I proceed with the following steps:
+Finally, I estimate equation (1) using 5 different Machine Learning (ML) models: polynomial regression, Ridge/Lasso regression, KNN regression, boosted tree, and random forest. I am aware that these models need some adjustments to be suitable for time series data; however, I implement them as covered in class because the class did not cover time series ML models. To estimate these ML models, I proceed with the following steps:
 
 - I split the data into 3 different sets:
 
@@ -51,7 +57,7 @@ Finally, I estimate equation (1) using 5 different Machine Learning (ML) models:
 
 - - training set: the set of data before 2017 on the 6 countries that were not randomly selected
 
-- For each of the machine learning model, because each model is characterized by some parameters (Eg: Ridge/Lasso are characterized by the penalty parameter, KNN by the number of neighbor parameter), I train the model using the training set and use cross validation to select the best parameters characterizing each model.
+- For each of the machine learning model, because each model is characterized by some parameters (Eg: Ridge/Lasso are characterized by the penalty parameter, KNN by the number of neighbor parameter,...), I train the model using the training set and use cross validation to select the best parameters characterizing each model.
 
 - I fit the model with the parameter giving the lowest training Root Mean Square Error (RMSE) on the test sets.
 
@@ -59,13 +65,13 @@ My primary findings suggest that the prediction is better for more flexible mode
 
 The prediction results on test set 2, the set of data after 2017 on the 6 countries that were not randomly selected, is promising. Between 2017 and 2020, the model does a decent job in predicting inflation path. However, after 2020, the effects of Covid-19 on inflation made the prediction of inflation more challenging for the models. This result is expected given that the keywords were collected between 2015 and 2017, so the model has no predictive power based on the Covid-19 shock. However, Covid-19 had a substantive impact on inflation.
 
-On the hand, the models are not performing very well on test set 1, the set of 3 randomly selected countries. This result is also expected given that this test set is relatively large compared to test 2. On test set 1, the models predict the inflation path of the 3 randomly chosen countries from 2004 to 2022,  which is a relatively hard task compared to the estimation in test set 2 for various reasons. First, compared to test set 2, there is no prior information of inflation path from the 3 countries included in the model. Moreover, the time frame is very long, which implies that several shocks that can affect the inflation rate in the different countries are left unaccounted in the models. This issue portrays the limitation of only using US newspapers to select the keywords, which generally does not account for the major events that can affect inflation trend in the other countries. Finally, given that most countries already have some prior information on inflation trend, results from test set 2 are more important and more realistic.
+On the other hand, the models are not performing very well on test set 1, the set of 3 randomly selected countries. This result is also expected given that this test set is relatively large compared to test 2. On test set 1, the models predict the inflation path of the 3 randomly chosen countries from 2004 to 2022,  which is a relatively hard task compared to the estimation in test set 2 for various reasons. First, compared to test set 2, there is no prior information of inflation path from the 3 countries included in the model. Moreover, the time frame is very long, which implies that several shocks that can affect the inflation rate in the different countries are left unaccounted in the models. This issue portrays the limitation of only using US newspapers to select the keywords, which generally does not account for the major events that can affect inflation trend in the other countries. Finally, given that most countries already have some prior information on inflation trend, results from test set 2 are more important and more realistic.
 
 Although the results are promising, the analysis in this project can be improved in many ways:
 
 - the first is to implement ML models more appropriate to time series data to account for serial correlation. I only implement the models covered in the class which does not include time series ML models
 
-- using keywords from the local language (Eg: Brazil: Portuguese, Mexico: Spanish) can also greatly improve the prediction accuracy of the models. 
+- using keywords from the local language (Eg: Brazil: Portuguese, Mexico: Spanish) could also greatly improve the prediction accuracy of the models. 
 
 - adding more keywords from longer period of time can account for the different events that can affect inflation rate.
 
@@ -140,11 +146,26 @@ saveRDS(article, file="./saved_Rdata/article.RData")
 
 ```
 
-After selecting the articles relevant for inflation, the next step is to clean the articles by removing irrelevant contents such as punctuation, white spaces, numbers, and stopwords. 
+Below is a visualization of the different publishers of the articles about inflation. We can see that Reuters has a fairly large number of articles about inflation compared to the other publishers. 
 
 ```{r, message = F, warning = F }
 article <- readRDS("./saved_Rdata/article.RData")
 
+article %>% count(publication) %>% 
+  mutate(publication = reorder(publication,n)) %>%
+  ggplot(aes(x = n, y = publication)) +
+  geom_col()+
+  labs(x = "Count", y = "Publisher ", title = "Publishers Of The Articles Containing The Keyword: INFLATION") +
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.title.x = element_text(face="bold",size = 12),
+        axis.title.y = element_text(face="bold",size = 12)) +
+  theme_minimal()
+
+```
+
+After selecting the articles relevant for inflation, the next step is to clean the articles by removing irrelevant contents such as punctuation, white spaces, numbers, and stopwords.
+
+```{r, message = F, warning = F }
 content_text <- Corpus(VectorSource(article$content)) #loading text content
 
 #Cleaning texts by removing punctuation, numbers, stopwords,...
@@ -172,7 +193,7 @@ content_word_freq <- content_word_freq1[-c(1,2,3,8,19)]
 wordcloud(words=names(content_word_freq), freq=content_word_freq, scale=c(2.5,.2), max.words = 50)
 ```
 
-Finally, I choose the 30 most common words from the articles to use them as predictors for equation (1). Below, I plot the 30 most common words. We can see that the most common words are the words trump and inflation. This is not very surprising given that the articles where written the year before and after the 2016 election. It's also good to notice that most of the keywords represent the key economic words that are related to inflation including growth, rate, bank, fed. 
+Finally, I choose the 30 most common words from the articles to use them as predictors for equation (1). Below, I plot the 30 most common words. We can see that the most common words are the words "trump" and "inflation." This is not very surprising given that the articles where written the year before and after the 2016 election. It's also good to notice that most of the keywords represent the key economic words that are related to inflation including growth, rate, bank, fed. 
 
 ```{r, message = F, warning = F , fig.width = 10, fig.align='center'}
 #Picking the 30 most common words
@@ -188,8 +209,8 @@ content_word_freq_barplot <- content_word_freq_data_fr %>%
   geom_col(aes(fill = value))+
   labs(x = "Count", y = "Word ", title = "Most Frequent Words In The Articles Containing The Keyword: INFLATION") +
   theme(plot.title = element_text(hjust = 0.5), 
-        axis.title.x = element_text(face="bold", colour="darkblue", size = 12),
-        axis.title.y = element_text(face="bold", colour="darkblue", size = 12)) +
+        axis.title.x = element_text(face="bold", size = 12),
+        axis.title.y = element_text(face="bold", size = 12)) +
   theme_minimal()
 
 content_word_freq_barplot
@@ -202,7 +223,9 @@ Note: I used the following links ([1](https://dk81.github.io/dkmathstats_site/rt
 
 ## 2 - b) Google Trend Data 
 
-Using the keywords from the articles, I pipe the search magnitude from different countries related to these keywords from Google Trend. To do this, I use the [gTrendsR](https://cran.r-project.org/web/packages/gtrendsR/gtrendsR.pdf) package. I try to pipe the data from the beginning of Google Trend in January 2004 to the last avalaible data before I started this project, which is September 2022. I selected 9 countries for this study, but more countries can be added. The countries selected were: United States, Great Britain, Australia, Canada, South Africa, Brazil, Japan, India, Mexico, and Switzerland.
+Using the keywords from the articles, I pipe the search magnitude from different countries related to these keywords from Google Trend. To do this, I use the [gTrendsR](https://cran.r-project.org/web/packages/gtrendsR/gtrendsR.pdf) package. I try to pipe the data from the beginning of Google Trend in January 2004 to September 2022. I selected 9 countries for this study, but more countries can be added. The countries selected were: United States, Great Britain, Australia, Canada, South Africa, Brazil, Japan, India, Mexico, and Switzerland.
+
+For a given country, Google Trend gives a search comparison across the keywords if the data for all the keywords are piped at the same time. So, the search magnitude of each keyword from each country needs to be piped one at a time. First, I create a list for each country. The elements of this list is the search data from Google Trend of each keyword.
 
 ```{r, message = F, warning = F, eval = F}
 #################### Pipping the data from Google trend ##########################
@@ -293,6 +316,18 @@ for (j in keyword) {
 }
 ```
 
+Next, I follow the detailed process below to combine the data each of the country list:
+
+- First, I select the necessary variables (date, hits, keyword, geo) from the keyword data frame contained in the list related to country j.
+
+- Then I replace the hits (= number of searches for the given keyword) to 0 if the number of hits are very low (<1).
+
+- I convert the data frame into a wide format so that the keyword becomes a column of hit values.
+
+- The steps above are repeated in the for loop for each keyword of country j and the column of hit values are joined together to form a unique dataframe for country j.
+
+- I bind the dataframe of each country by row to form a single dataframe containing all the countries.
+
 
 ```{r, message = F, warning = F, eval = F}
 ###### After collecting the search values of each keyword in each country, 
@@ -373,7 +408,7 @@ paged_table(monthly_inflation %>% head(5), options = list(rows.print = 15, cols.
 
 ```
 
-Below, I write a function called yearly inflation calculator to compute the yearly change in inflation using the monthly change data in inflation. Then, I construct an interactive map showing the median change in inflation across the 43 countries from the original OECD data between 2004 and 2022. This map shows how heterogenious is the inflation rate across countries. Some countries like the US have fairly stable inflation rate while others have very fluctuating values. However, notice the effects of Covid-19 on inflation rate across the countries. After the Covid-19 in 2020, almost all of the countries have high inflation level.  
+Below, I write a function called yearly inflation calculator to compute the yearly change in inflation using the monthly change data in inflation. Then, I construct an interactive map showing the median change in inflation across the 43 countries from the original OECD data between 2004 and 2022. This map shows how heterogenious the inflation rate is across countries. Over time, some countries like the US have fairly stable inflation rate while others have very fluctuating values. However, notice the effects of Covid-19 on inflation rate across the countries. After the Covid-19 in 2020, almost all of the countries have high inflation level.  
 
 ```{r, message = F, warning = F}
 # Loading the full inflation data
@@ -381,6 +416,10 @@ monthly_inflation_map <- read_csv("./data/full_monthly_inflation_data_fixed_exec
 monthly_inflation_map <- monthly_inflation_map %>%
   pivot_longer(c(2:227), names_pattern = "(........)", names_to = c("year"), values_transform = as.numeric)
 
+
+# I create this function to convert the monthly inflation to yearly inflation
+# The function compute the compounded change over the last 12 months in a given value 12 months ago (here it's 1). 
+# Then return the change from the final compounded value to the value 12 months ago, which is the yearly inflation.
 yearly_inflation_calculator <- function(x){
   #Initial value from the previous month
   a<-1+(lag(x,1)/100)
@@ -540,19 +579,6 @@ Now I compute the yearly inflation change from the monthly inflation change prov
 ###########Calculating yearly inflation from monthly inflation
 # First I rename the data so I can preserve the original dataset.
 model_data <- final_data
-
-# I create this function to convert the monthly inflation to yearly inflation
-# The function compute the compounded change over the last 12 months in a given value 12 months ago (here it's 1). 
-# Then return the change from the final compounded value to the value 12 months ago, which is the yearly inflation.
-yearly_inflation_calculator <- function(x){
-  #Initial value from the previous month
-  a<-1+(lag(x,1)/100)
-  
-  for (i in 2:12) {
-    a = (1+(lag(x,i)/100))*a
-  }
-  return(a-1)
-}
 
 # Using the yearly_inflation_calculator function created above, I compute the yearly inflation for each country. 
 model_data <- model_data %>% 
@@ -735,9 +761,9 @@ keyword_model_data <- model_data %>%
 keyword_plot1 <- keyword_model_data %>%
   ggplot(aes(x = date)) +
   geom_line(data = keyword_model_data %>% filter(geo == "US"), aes( y= yearly_inflation , col = "inflation rate")) +
-  geom_line(data = keyword_model_data %>% filter(geo == "US"), aes( y= inflation , col = "inflation keyword")) +
-  geom_line(data = keyword_model_data %>% filter(geo == "US"), aes( y = interest_rate , col = "interest rate keyword")) +
-  scale_color_manual(values = c("inflation rate" = "black", "inflation keyword" = "red" , "interest rate keyword" = "blue")) +
+  geom_line(data = keyword_model_data %>% filter(geo == "US"), aes( y= inflation , col = "inflation keyword search magnitude")) +
+  geom_line(data = keyword_model_data %>% filter(geo == "US"), aes( y = interest_rate , col = "interest rate keyword search magnitude")) +
+  scale_color_manual(values = c("inflation rate" = "black", "inflation keyword search magnitude" = "red" , "interest rate keyword search magnitude" = "blue")) +
   guides(color=guide_legend("")) +
   theme_classic() +
   ylab("") +
@@ -750,9 +776,9 @@ keyword_plot1 <- keyword_model_data %>%
 keyword_plot2 <- keyword_model_data %>%
   ggplot(aes(x = date)) +
   geom_line(data = keyword_model_data %>% filter(geo == "JP"), aes( y= yearly_inflation , col = "inflation rate")) +
-  geom_line(data = keyword_model_data %>% filter(geo == "JP"), aes( y= inflation , col = "inflation keyword")) +
-  geom_line(data = keyword_model_data %>% filter(geo == "JP"), aes( y = interest_rate , col = "interest rate keyword")) +
-  scale_color_manual(values = c("inflation rate" = "black", "inflation keyword" = "red" , "interest rate keyword" = "blue")) +
+  geom_line(data = keyword_model_data %>% filter(geo == "JP"), aes( y= inflation , col = "inflation keyword search magnitude")) +
+  geom_line(data = keyword_model_data %>% filter(geo == "JP"), aes( y = interest_rate , col = "interest rate keyword search magnitude")) +
+  scale_color_manual(values = c("inflation rate" = "black", "inflation keyword search magnitude" = "red" , "interest rate keyword search magnitude" = "blue")) +
   guides(color=guide_legend("")) +
   theme_classic() +
   ylab("") +
@@ -882,7 +908,7 @@ tune_res <- tune_grid(
 saveRDS(tune_res, file="./saved_Rdata/tune_res_poly_saved.RData")
 ```
 
-To estimate the polynomial regression, I first create a recipe for the model. A recipe is the set of predictors and the different changes applied to that set before estimating the model. For the polynomial regression recipe, first I remove the date from the set of predictors. Then given that I included lagge values for the keywords which creates missing values, I impute the means of the variables for the missing values created by the lags. I also create dummy variables for the country, month, and year, and I normalize the predictors to have a mean of 0 and a standard deviation of 1. I also include the polynomial degrees of the predictors in the recipe, and the optimal degree will be tuned using cross validation. For the cross validation, I choose the degree polynomial that gives the lowest RMSE for degrees between 1 and 5. This recipe results in the following model to be estimated: 
+To estimate the polynomial regression, I first create a recipe for the model. A recipe is the set of predictors and the different changes applied to that set before estimating the model. For the polynomial regression recipe, first I remove the date from the set of predictors. Then, because I included lagged values for the keywords which creates missing values, I impute the means of the variables for the missing values created by the lags. I also create dummy variables for the country, month, and year, and I normalize the predictors to have a mean of 0 and a standard deviation of 1. I also include the polynomial degrees of the predictors in the recipe, and the optimal degree will be tuned using cross validation. For the cross validation, I choose the degree polynomial that gives the lowest RMSE for degrees between 1 and 5. This recipe results in the following model to be estimated: 
 
 $$ Inflation_{cmy} = \sum_{r=0}^{R=3}X_{c(m-r)y} \beta_r  + \sum_{r=0}^{R=3}X_{c(m-r)y}^{p} \gamma_r  + \alpha Country_{my} + \delta Month_{cy}+ \theta Year_{my} + \epsilon_{cmy} (2)$$
 where: 
